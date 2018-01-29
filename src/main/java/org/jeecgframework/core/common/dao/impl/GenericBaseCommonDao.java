@@ -5,9 +5,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.lang.model.util.ElementScanner6;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -44,6 +47,7 @@ import org.jeecgframework.core.util.StringUtil;
 import org.jeecgframework.core.util.ToEntityUtil;
 import org.jeecgframework.core.util.oConvertUtils;
 import org.jeecgframework.tag.vo.datatable.DataTableReturn;
+import org.jeecgframework.tag.vo.datatable.SortDirection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
@@ -681,39 +685,64 @@ public abstract class GenericBaseCommonDao<T, PK extends Serializable>
 		} else {
 			pageSize = allCounts;
 		}
-		DetachedCriteriaUtil.selectColumn(cq.getDetachedCriteria(), cq
-				.getField().split(","), cq.getEntityClass(), false);
-		return new DataTableReturn(allCounts, allCounts, cq.getDataTables()
-				.getEcho(), criteria.list());
+		DetachedCriteriaUtil.selectColumn(cq.getDetachedCriteria(), cq.getField().split(","), cq.getEntityClass(), false);
+		return new DataTableReturn(allCounts, allCounts, cq.getDataTables().getEcho(), criteria.list());
 	}
 
 	/**
 	 * 返回easyui datagrid DataGridReturn模型对象
 	 */
-	public DataGridReturn getDataGridReturn(final CriteriaQuery cq,
-			final boolean isOffset) {
-		Criteria criteria = cq.getDetachedCriteria().getExecutableCriteria(
-				getSession());
+
+	public void getDataGridReturn(CriteriaQuery cq,final boolean isOffset) {
+
+		Criteria criteria = cq.getDetachedCriteria().getExecutableCriteria(getSession());
 		CriteriaImpl impl = (CriteriaImpl) criteria;
 		// 先把Projection和OrderBy条件取出来,清空两者来执行Count操作
 		Projection projection = impl.getProjection();
-		final int allCounts = ((Long) criteria.setProjection(
-				Projections.rowCount()).uniqueResult()).intValue();
+		final int allCounts = ((Long) criteria.setProjection(Projections.rowCount()).uniqueResult()).intValue();
 		criteria.setProjection(projection);
 		if (projection == null) {
 			criteria.setResultTransformer(CriteriaSpecification.ROOT_ENTITY);
 		}
-		if (StringUtils.isNotBlank(cq.getDataGrid().getSort())) {
-			cq.addOrder(cq.getDataGrid().getSort(), cq.getDataGrid().getOrder());
+
+		Map<String, Object> ordermap = cq.getOrdermap();
+		if(ordermap==null){
+			ordermap = new LinkedHashMap<String, Object>();
+		}
+		
+		String sort = cq.getDataGrid().getSort();
+		if (StringUtils.isNotBlank(sort)) {
+			String []sortArr = sort.split(",");
+			String []orderArr = cq.getDataGrid().getOrder().split(",");
+			if(sortArr.length != orderArr.length && orderArr.length > 0){
+				for (int i = 0; i < sortArr.length; i++) {
+					if(SortDirection.asc.equals(SortDirection.toEnum(orderArr[0]))){
+						ordermap.put(sortArr[i], SortDirection.asc);
+					}else{
+						ordermap.put(sortArr[i], SortDirection.desc);
+					}
+				}
+			}else if(sortArr.length == orderArr.length){
+				for (int i = 0; i < sortArr.length; i++) {
+					if(SortDirection.asc.equals(SortDirection.toEnum(orderArr[i]))){
+						ordermap.put(sortArr[i], SortDirection.asc);
+					}else{
+						ordermap.put(sortArr[i], SortDirection.desc);
+					}
+				}
+			}
+		}
+		if(!ordermap.isEmpty() && ordermap.size()>0){
+			cq.setOrder(ordermap);
 		}
 
+
 		// 判断是否有排序字段
-		if (!cq.getOrdermap().isEmpty()) {
-			cq.setOrder(cq.getOrdermap());
-		}
+//		if (!cq.getOrdermap().isEmpty()) {
+//			cq.setOrder(cq.getOrdermap());
+//		}
 		int pageSize = cq.getPageSize();// 每页显示数
-		int curPageNO = PagerUtil.getcurPageNo(allCounts, cq.getCurPage(),
-				pageSize);// 当前页
+		int curPageNO = PagerUtil.getcurPageNo(allCounts, cq.getCurPage(),pageSize);// 当前页
 		int offset = PagerUtil.getOffset(allCounts, curPageNO, pageSize);
 		if (isOffset) {// 是否分页
 			criteria.setFirstResult(offset);
@@ -723,10 +752,15 @@ public abstract class GenericBaseCommonDao<T, PK extends Serializable>
 		}
 		// DetachedCriteriaUtil.selectColumn(cq.getDetachedCriteria(),
 		// cq.getField().split(","), cq.getClass1(), false);
-		List list = criteria.list();
+		List<?> list = criteria.list();
 		cq.getDataGrid().setResults(list);
 		cq.getDataGrid().setTotal(allCounts);
-		return new DataGridReturn(allCounts, list);
+
+		cq.clear();
+		cq = null;
+
+		//return new DataGridReturn(allCounts, list);
+
 	}
 
 	/**
@@ -907,8 +941,10 @@ public abstract class GenericBaseCommonDao<T, PK extends Serializable>
 		Object keyValue = null;
 		KeyHolder keyHolder = null;
 		SqlParameterSource sqlp  = new MapSqlParameterSource(param);
-
 		if (StringUtil.isNotEmpty(param.get("id"))) {//表示已经生成过id(UUID),则表示是非序列或数据库自增的形式
+			this.namedParameterJdbcTemplate.update(sql,sqlp);
+		//--author：zhoujf---start------date:20170216--------for:自定义表单保存数据格sqlserver报错问题
+		}else if (StringUtil.isNotEmpty(param.get("ID"))) {//表示已经生成过id(UUID),则表示是非序列或数据库自增的形式
 			this.namedParameterJdbcTemplate.update(sql,sqlp);
 		}else{//NATIVE or SEQUENCE
 			keyHolder = new GeneratedKeyHolder();
@@ -918,7 +954,6 @@ public abstract class GenericBaseCommonDao<T, PK extends Serializable>
 				keyValue = keyHolder.getKey().longValue();
 			}
 		}
-
 		return keyValue;
 	}
 

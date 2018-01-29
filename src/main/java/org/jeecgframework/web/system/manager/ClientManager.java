@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
+import javax.servlet.http.HttpSession;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jeecgframework.core.util.ContextHolderUtils;
 import org.jeecgframework.core.util.EhcacheUtil;
@@ -15,7 +17,7 @@ import org.jeecgframework.web.system.pojo.base.Client;
  * @date 2013-9-28
  * @version 1.0
  */
-//add-begin-Author:xugj Date:20160228 for:#859 【jeecg分布式改造】目前用户登录session存在class级别缓存导致分布式
+
 public class ClientManager {
 	private final String CACHENAME ="eternalCache";
 	private final String OnlineClientsKey ="onLineClients";
@@ -85,7 +87,13 @@ public class ClientManager {
 	 * sessionId
 	 */
 	public void removeClinet(String sessionId){
-		ContextHolderUtils.getSession().removeAttribute(sessionId);
+		try {
+			ContextHolderUtils.removeSession(sessionId);
+		} catch (Exception e) {}
+		try {
+			HttpSession session = ContextHolderUtils.getSession();
+			session.removeAttribute(sessionId);
+		} catch (Exception e) {}
 		removeClientFromCachedMap(sessionId);
 	}
 	/**
@@ -125,4 +133,4 @@ public class ClientManager {
 			return new ArrayList<Client>();
 	}
 }
-//add-end-Author:xugj Date:20160228 for:#859 【jeecg分布式改造】目前用户登录session存在class级别缓存导致分布式
+

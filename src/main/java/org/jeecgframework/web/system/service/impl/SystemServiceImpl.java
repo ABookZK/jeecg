@@ -1,5 +1,6 @@
 package org.jeecgframework.web.system.service.impl;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -10,9 +11,10 @@ import javax.servlet.http.HttpSession;
 
 import org.jeecgframework.core.common.hibernate.qbc.CriteriaQuery;
 import org.jeecgframework.core.common.service.impl.CommonServiceImpl;
+import org.jeecgframework.core.constant.Globals;
 import org.jeecgframework.core.util.BrowserUtils;
 import org.jeecgframework.core.util.ContextHolderUtils;
-import org.jeecgframework.core.util.DateUtils;
+import org.jeecgframework.core.util.IpUtil;
 import org.jeecgframework.core.util.MutiLangUtil;
 import org.jeecgframework.core.util.ResourceUtil;
 import org.jeecgframework.core.util.StringUtil;
@@ -20,9 +22,12 @@ import org.jeecgframework.core.util.oConvertUtils;
 import org.jeecgframework.web.system.dao.JeecgDictDao;
 import org.jeecgframework.web.system.pojo.base.DictEntity;
 import org.jeecgframework.web.system.pojo.base.TSDatalogEntity;
+import org.jeecgframework.web.system.pojo.base.TSDepartAuthGroupEntity;
+import org.jeecgframework.web.system.pojo.base.TSDepartAuthgFunctionRelEntity;
 import org.jeecgframework.web.system.pojo.base.TSFunction;
 import org.jeecgframework.web.system.pojo.base.TSIcon;
 import org.jeecgframework.web.system.pojo.base.TSLog;
+import org.jeecgframework.web.system.pojo.base.TSOperation;
 import org.jeecgframework.web.system.pojo.base.TSRole;
 import org.jeecgframework.web.system.pojo.base.TSRoleFunction;
 import org.jeecgframework.web.system.pojo.base.TSRoleUser;
@@ -30,6 +35,7 @@ import org.jeecgframework.web.system.pojo.base.TSType;
 import org.jeecgframework.web.system.pojo.base.TSTypegroup;
 import org.jeecgframework.web.system.pojo.base.TSUser;
 import org.jeecgframework.web.system.service.SystemService;
+import org.jeecgframework.web.system.util.OrgConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,10 +76,22 @@ public class SystemServiceImpl extends CommonServiceImpl implements SystemServic
 		log.setLogcontent(logcontent);
 		log.setLoglevel(loglevel);
 		log.setOperatetype(operatetype);
-		log.setNote(oConvertUtils.getIp());
+
+		log.setNote(IpUtil.getIpAddr(request));
+
 		log.setBroswer(broswer);
-		log.setOperatetime(DateUtils.gettimestamp());
-		log.setTSUser(ResourceUtil.getSessionUserName());
+		/*start dangzhenghui 201703016TASK #1784 【online bug】Online 表单保存的时候，报错*/
+		log.setOperatetime(new Date());
+		/* end dangzhenghui 201703016TASK #1784 【online bug】Online 表单保存的时候，报错*/
+//		log.setTSUser(ResourceUtil.getSessionUser());
+		/*start chenqian 201708031TASK #2317 【改造】系统日志表，增加两个字段，避免关联查询 [操作人账号] [操作人名字]*/
+		TSUser u = ResourceUtil.getSessionUser();
+		if(u!=null){
+			log.setUserid(u.getId());
+			log.setUsername(u.getUserName());
+			log.setRealname(u.getRealName());
+		}
+
 		commonDao.save(log);
 	}
 
@@ -153,6 +171,21 @@ public class SystemServiceImpl extends CommonServiceImpl implements SystemServic
 	}
 
 	/**
+	 * 刷新字典分组缓存&字典缓存
+	 */
+	public void refreshTypeGroupAndTypes() {
+		ResourceUtil.allTypeGroups.clear();
+		List<TSTypegroup> typeGroups = this.commonDao.loadAll(TSTypegroup.class);
+		for (TSTypegroup tsTypegroup : typeGroups) {
+			ResourceUtil.allTypeGroups.put(tsTypegroup.getTypegroupcode().toLowerCase(), tsTypegroup);
+			List<TSType> types = this.commonDao.findByProperty(TSType.class, "TSTypegroup.id", tsTypegroup.getId());
+			ResourceUtil.allTypes.put(tsTypegroup.getTypegroupcode().toLowerCase(), types);
+		}
+	}
+
+
+
+	/**
 	 * 根据角色ID 和 菜单Id 获取 具有操作权限的按钮Codes
 	 * @param roleId
 	 * @param functionId
@@ -179,9 +212,10 @@ public class SystemServiceImpl extends CommonServiceImpl implements SystemServic
 	}
 
 	/**
+	 * 【规则： 反控制-查询授权的权限按钮Code；即授权的人进行按钮控制】
 	 * 根据用户ID 和 菜单Id 获取 具有操作权限的按钮Codes
-	 * @param roleId
-	 * @param functionId
+	 * @param roleId 角色ID
+	 * @param functionId 菜单ID
 	 * @return
 	 */
 	public Set<String> getOperationCodesByUserIdAndFunctionId(String userId, String functionId) {
@@ -207,6 +241,85 @@ public class SystemServiceImpl extends CommonServiceImpl implements SystemServic
 		return operationCodes;
 	}
 
+	/**
+	 * 【规则： 查询未授权的页面控件权限（button、表单控件）】
+	 *  @param userId 用户ID
+	 *  @param functionId 菜单ID
+	 */
+	@Override
+	public List<TSOperation> getOperationsByUserIdAndFunctionId(TSUser currLoginUser, String functionId) {
+		String hql="FROM TSOperation where functionid = '"+functionId+"'";
+		List<TSOperation> operations = findHql(hql);
+		if(operations == null || operations.size()<1){
+			return null;
+		}
+		List<TSRoleUser> rUsers = findByProperty(TSRoleUser.class, "TSUser.id", currLoginUser.getId());
+		for(TSRoleUser ru : rUsers){
+			TSRole role = ru.getTSRole();
+			CriteriaQuery cq1 = new CriteriaQuery(TSRoleFunction.class);
+			cq1.eq("TSRole.id", role.getId());
+			cq1.eq("TSFunction.id", functionId);
+			cq1.add();
+			List<TSRoleFunction> rFunctions = getListByCriteriaQuery(cq1, false);
+			if (null != rFunctions && rFunctions.size() > 0) {
+				TSRoleFunction tsRoleFunction = rFunctions.get(0);
+				if (oConvertUtils.isNotEmpty(tsRoleFunction.getOperation())) {
+					String[] operationArry = tsRoleFunction.getOperation().split(",");
+					for (int i = 0; i < operationArry.length; i++) {
+						for(int j=0;j<operations.size();j++){
+							if(operationArry[i].equals(operations.get(j).getId())){
+								operations.remove(j);
+								break;
+							}
+						}
+						
+					}
+				}
+			}
+		}
+		return operations;
+	}
+
+	/**
+	 * 获取页面控件权限控制的
+	 * JS片段
+	 * @param out
+	 */
+	public String getAuthFilterJS() {
+		StringBuilder out = new StringBuilder();
+		out.append("<script type=\"text/javascript\">");
+		out.append("$(document).ready(function(){");
+		if(ResourceUtil.getSessionUser().getUserName().equals("admin")|| !Globals.BUTTON_AUTHORITY_CHECK){
+			return "";
+		}else{
+			HttpServletRequest request = ContextHolderUtils.getRequest();
+			Set<String> operationCodes = (Set<String>) request.getAttribute(Globals.OPERATIONCODES);
+			if (null!=operationCodes) {
+				for (String MyoperationCode : operationCodes) {
+					if (oConvertUtils.isEmpty(MyoperationCode))
+						break;
+					TSOperation operation = this.getEntity(TSOperation.class, MyoperationCode);
+					if (operation.getOperationcode().startsWith(".") || operation.getOperationcode().startsWith("#")){
+						if (operation.getOperationType().intValue()==Globals.OPERATION_TYPE_HIDE){
+							//out.append("$(\""+name+"\").find(\"#"+operation.getOperationcode().replaceAll(" ", "")+"\").hide();");
+							out.append("$(\""+operation.getOperationcode().replaceAll(" ", "")+"\").hide();");
+						}else {
+							//out.append("$(\""+name+"\").find(\"#"+operation.getOperationcode().replaceAll(" ", "")+"\").find(\":input\").attr(\"disabled\",\"disabled\");");
+							out.append("$(\""+operation.getOperationcode().replaceAll(" ", "")+"\").attr(\"disabled\",\"disabled\");");
+							out.append("$(\""+operation.getOperationcode().replaceAll(" ", "")+"\").find(\":input\").attr(\"disabled\",\"disabled\");");
+						}
+					}
+				}
+			}else{
+				return "";
+			}
+			
+		}
+		out.append("});");
+		out.append("</script>");
+		return out.toString();
+	}
+	
 	public void flushRoleFunciton(String id, TSFunction newFunction) {
 		TSFunction functionEntity = this.getEntity(TSFunction.class, id);
 		if (functionEntity.getTSIcon() == null || !StringUtil.isNotEmpty(functionEntity.getTSIcon().getId())) {
@@ -216,7 +329,7 @@ public class SystemServiceImpl extends CommonServiceImpl implements SystemServic
 		if (!oldIcon.getIconClas().equals(newFunction.getTSIcon().getIconClas())) {
 			// 刷新缓存
 			HttpSession session = ContextHolderUtils.getSession();
-			TSUser user = ResourceUtil.getSessionUserName();
+			TSUser user = ResourceUtil.getSessionUser();
 			List<TSRoleUser> rUsers = this.findByProperty(TSRoleUser.class, "TSUser.id", user.getId());
 			for (TSRoleUser ru : rUsers) {
 				TSRole role = ru.getTSRole();
@@ -283,11 +396,11 @@ public class SystemServiceImpl extends CommonServiceImpl implements SystemServic
 		return operationCodes;
 	}
 
-	public Set<String> getOperationCodesByUserIdAndDataId(String userId,
+	public Set<String> getOperationCodesByUserIdAndDataId(TSUser currLoginUser,
 			String functionId) {
 		// TODO Auto-generated method stub
 		Set<String> dataRulecodes = new HashSet<String>();
-		List<TSRoleUser> rUsers = findByProperty(TSRoleUser.class, "TSUser.id", userId);
+		List<TSRoleUser> rUsers = findByProperty(TSRoleUser.class, "TSUser.id", currLoginUser.getId());
 		for (TSRoleUser ru : rUsers) {
 			TSRole role = ru.getTSRole();
 			CriteriaQuery cq1 = new CriteriaQuery(TSRoleFunction.class);
@@ -297,7 +410,7 @@ public class SystemServiceImpl extends CommonServiceImpl implements SystemServic
 			List<TSRoleFunction> rFunctions = getListByCriteriaQuery(cq1, false);
 			if (null != rFunctions && rFunctions.size() > 0) {
 				TSRoleFunction tsRoleFunction = rFunctions.get(0);
-				if (null != tsRoleFunction.getDataRule()) {
+				if (oConvertUtils.isNotEmpty(tsRoleFunction.getDataRule())) {
 					String[] operationArry = tsRoleFunction.getDataRule().split(",");
 					for (int i = 0; i < operationArry.length; i++) {
 						dataRulecodes.add(operationArry[i]);
@@ -348,6 +461,100 @@ public class SystemServiceImpl extends CommonServiceImpl implements SystemServic
 		tsDatalogEntity.setDataContent(dataContent);
 		tsDatalogEntity.setVersionNumber(versionNumber + 1);
 		commonDao.save(tsDatalogEntity);
+	}
+
+	/**
+	 * 获取二级管理员页面控件权限授权配置【二级管理员后台权限配置功能】
+	 * @param groupId 部门角色组ID
+	 * @param functionId 选中菜单ID
+	 * @Param type 0:部门管理员组/1:部门角色
+	 * @return
+	 */
+	@Override
+	public Set<String> getDepartAuthGroupOperationSet(String groupId,String functionId,String type) {
+		Set<String> operationCodes = new HashSet<String>();
+		TSDepartAuthGroupEntity functionGroup = null;
+		if(OrgConstants.GROUP_DEPART_ROLE.equals(type)) {
+			TSRole role = commonDao.get(TSRole.class, groupId);
+			CriteriaQuery cq1 = new CriteriaQuery(TSRoleFunction.class);
+			cq1.eq("TSRole.id", role.getId());
+			cq1.eq("TSFunction.id", functionId);
+			cq1.add();
+			List<TSRoleFunction> functionGroups = getListByCriteriaQuery(cq1, false);
+			if (null != functionGroups && functionGroups.size() > 0) {
+				TSRoleFunction tsFunctionGroup = functionGroups.get(0);
+				if (null != tsFunctionGroup.getOperation()) {
+					String[] operationArry = tsFunctionGroup.getOperation().split(",");
+					for (int i = 0; i < operationArry.length; i++) {
+						operationCodes.add(operationArry[i]);
+					}
+				}
+			}
+		} else {
+			functionGroup = commonDao.get(TSDepartAuthGroupEntity.class, groupId);
+			CriteriaQuery cq1 = new CriteriaQuery(TSDepartAuthgFunctionRelEntity.class);
+			cq1.eq("tsDepartAuthGroup.id", functionGroup.getId());
+			cq1.eq("tsFunction.id", functionId);
+			cq1.add();
+			List<TSDepartAuthgFunctionRelEntity> functionGroups = getListByCriteriaQuery(cq1, false);
+			if (null != functionGroups && functionGroups.size() > 0) {
+				TSDepartAuthgFunctionRelEntity tsFunctionGroup = functionGroups.get(0);
+				if (null != tsFunctionGroup.getOperation()) {
+					String[] operationArry = tsFunctionGroup.getOperation().split(",");
+					for (int i = 0; i < operationArry.length; i++) {
+						operationCodes.add(operationArry[i]);
+					}
+				}
+			}
+		}
+		return operationCodes;
+	}
+
+	/**
+	 * 获取二级管理员数据权限授权配置【二级管理员后台权限配置功能】
+	 * @param groupId 部门角色组ID
+	 * @param functionId 选中菜单ID
+	 * @Param type  0:部门管理员组/1:部门角色
+	 * @return
+	 */
+	@Override
+	public Set<String> getDepartAuthGroupDataRuleSet(String groupId, String functionId,String type) {
+		Set<String> dataRuleCodes = new HashSet<String>();
+		TSDepartAuthGroupEntity functionGroup = null;
+		if(OrgConstants.GROUP_DEPART_ROLE.equals(type)) {
+			TSRole role = commonDao.get(TSRole.class, groupId);
+			CriteriaQuery cq1 = new CriteriaQuery(TSRoleFunction.class);
+			cq1.eq("TSRole.id", role.getId());
+			cq1.eq("TSFunction.id", functionId);
+			cq1.add();
+			List<TSRoleFunction> functionGroups = getListByCriteriaQuery(cq1, false);
+			if (null != functionGroups && functionGroups.size() > 0) {
+				TSRoleFunction tsFunctionGroup = functionGroups.get(0);
+				if (null != tsFunctionGroup.getDataRule()) {
+					String[] dataRuleArry = tsFunctionGroup.getDataRule().split(",");
+					for (int i = 0; i < dataRuleArry.length; i++) {
+						dataRuleCodes.add(dataRuleArry[i]);
+					}
+				}
+			}
+		} else {
+			functionGroup = commonDao.get(TSDepartAuthGroupEntity.class, groupId);
+			CriteriaQuery cq1 = new CriteriaQuery(TSDepartAuthgFunctionRelEntity.class);
+			cq1.eq("tsDepartAuthGroup.id", functionGroup.getId());
+			cq1.eq("tsFunction.id", functionId);
+			cq1.add();
+			List<TSDepartAuthgFunctionRelEntity> functionGroups = getListByCriteriaQuery(cq1, false);
+			if (null != functionGroups && functionGroups.size() > 0) {
+				TSDepartAuthgFunctionRelEntity tsFunctionGroup = functionGroups.get(0);
+				if (null != tsFunctionGroup.getDatarule()) {
+					String[] dataRuleArry = tsFunctionGroup.getDatarule().split(",");
+					for (int i = 0; i < dataRuleArry.length; i++) {
+						dataRuleCodes.add(dataRuleArry[i]);
+					}
+				}
+			}
+		}
+		return dataRuleCodes;
 	}
 
 }

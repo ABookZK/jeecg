@@ -26,15 +26,16 @@
             $("#orgSelect").combotree("setValues", ${orgIdList});
         }); --%>
 
+
 		function openDepartmentSelect() {
 			$.dialog.setting.zIndex = getzIndex(); 
-			
 			var orgIds = $("#orgIds").val();
-			
-			$.dialog({content: 'url:departController.do?departSelect&orgIds='+orgIds, zIndex: 2100, title: '组织机构列表', lock: true, width: '400px', height: '350px', opacity: 0.4, button: [
+
+			$.dialog({content: 'url:departController.do?departSelect&orgIds='+orgIds, zIndex: getzIndex(), title: '组织机构列表', lock: true, width: '400px', height: '350px', opacity: 0.4, button: [
 			   {name: '<t:mutiLang langKey="common.confirm"/>', callback: callbackDepartmentSelect, focus: true},
 			   {name: '<t:mutiLang langKey="common.cancel"/>', callback: function (){}}
 		   ]}).zindex();
+
 		}
 			
 		function callbackDepartmentSelect() {
@@ -67,7 +68,7 @@
 </head>
 <body style="overflow-y: hidden" scroll="no">
 <t:formvalid formid="formobj" dialog="true" usePlugin="password" layout="table" action="userController.do?saveUser" beforeSubmit="setOrgIds">
-	<input id="id" name="id" type="hidden" value="${user.id }">
+	<input id="id" name="id" type="hidden" value="${user.id }"/>
 	<table style="width: 600px;" cellpadding="0" cellspacing="1" class="formtable">
 		<tr>
 			<td align="right" width="25%" nowrap>
@@ -84,7 +85,7 @@
 		<tr>
 			<td align="right" width="10%" nowrap><label class="Validform_label"> <t:mutiLang langKey="common.real.name"/>: </label></td>
 			<td class="value" width="10%">
-                <input id="realName" class="inputxt" name="realName" value="${user.realName }" datatype="s2-10">
+                <input id="realName" class="inputxt" name="realName" value="${user.realName }" datatype="s2-10"/>
                 <span class="Validform_checktip"><t:mutiLang langKey="fill.realname"/></span>
             </td>
 		</tr>
@@ -104,7 +105,7 @@
 			<tr>
 				<td align="right"><label class="Validform_label"> <t:mutiLang langKey="common.repeat.password"/>: </label></td>
 				<td class="value">
-                    <input id="repassword" class="inputxt" type="password" value="${user.password}" recheck="password" datatype="*6-18" errormsg="两次输入的密码不一致！">
+                    <input id="repassword" class="inputxt" type="password" value="${user.password}" recheck="password" datatype="*6-18" errormsg="两次输入的密码不一致！"/>
                     <span class="Validform_checktip"><t:mutiLang langKey="common.repeat.password"/></span>
                 </td>
 			</tr>
@@ -122,8 +123,8 @@
                 </select> --%>
                 <%--  <t:departSelect departId="${tsDepart.id }" departName="${tsDepart.departname }"></t:departSelect>--%>
                 
-                <input id="departname" name="departname" type="text" readonly="readonly" class="inputxt" datatype="*" value="${departname}">
-                <input id="orgIds" name="orgIds" type="hidden" value="${orgIds}">
+                <input id="departname" name="departname" type="text" readonly="readonly" class="inputxt" datatype="*" value="${departname}"/>
+                <input id="orgIds" name="orgIds" type="hidden" value="${orgIds}"/>
                 <a href="#" class="easyui-linkbutton" plain="true" icon="icon-search" id="departSearch" onclick="openDepartmentSelect()">选择</a>
                 <a href="#" class="easyui-linkbutton" plain="true" icon="icon-redo" id="departRedo" onclick="callbackClean()">清空</a>
                 <span class="Validform_checktip"><t:mutiLang langKey="please.muti.department"/></span>
@@ -132,34 +133,41 @@
 		<tr>
 			<td align="right"><label class="Validform_label"> <t:mutiLang langKey="common.role"/>: </label></td>
 			<td class="value" nowrap>
-                <input name="roleid" name="roleid" type="hidden" value="${id}" id="roleid">
-                <input name="roleName" class="inputxt" value="${roleName }" id="roleName" readonly="readonly" datatype="*" />
-                <t:choose hiddenName="roleid" hiddenid="id" url="userController.do?roles" name="roleList"
-                          icon="icon-search" title="common.role.list" textname="roleName" isclear="true" isInit="true"></t:choose>
+                <input id="roleid" name="roleid" type="hidden" value="${id}"/>
+                <input name="roleName" id="roleName" class="inputxt" value="${roleName }" readonly="readonly" datatype="*" />
+                <t:choose hiddenName="roleid" hiddenid="id" textname="roleName" url="userController.do?roles" name="roleList" icon="icon-search" title="common.role.list" isclear="true" isInit="true"></t:choose>
                 <span class="Validform_checktip"><t:mutiLang langKey="role.muti.select"/></span>
             </td>
 		</tr>
 		<tr>
 			<td align="right" nowrap><label class="Validform_label">  <t:mutiLang langKey="common.phone"/>: </label></td>
 			<td class="value">
-                <input class="inputxt" name="mobilePhone" value="${user.mobilePhone}" datatype="m" errormsg="手机号码不正确" ignore="ignore">
+                <input class="inputxt" name="mobilePhone" value="${user.mobilePhone}" datatype="m" errormsg="手机号码不正确" ignore="ignore"/>
                 <span class="Validform_checktip"></span>
             </td>
 		</tr>
 		<tr>
 			<td align="right"><label class="Validform_label"> <t:mutiLang langKey="common.tel"/>: </label></td>
 			<td class="value">
-                <input class="inputxt" name="officePhone" value="${user.officePhone}" datatype="n" errormsg="办公室电话不正确" ignore="ignore">
+                <input class="inputxt" name="officePhone" value="${user.officePhone}" datatype="n" errormsg="办公室电话不正确" ignore="ignore"/>
                 <span class="Validform_checktip"></span>
             </td>
 		</tr>
 		<tr>
 			<td align="right"><label class="Validform_label"> <t:mutiLang langKey="common.common.mail"/>: </label></td>
 			<td class="value">
-                <input class="inputxt" name="email" value="${user.email}" datatype="e" errormsg="邮箱格式不正确!" ignore="ignore">
+                <input class="inputxt" name="email" value="${user.email}"  validType="t_s_user,email,id" datatype="e" errormsg="邮箱格式不正确!" />
                 <span class="Validform_checktip"></span>
             </td>
 		</tr>
+        <tr>
+            <td align="right"><label class="Validform_label"> <t:mutiLang langKey="common.common.dev"/>: </label></td>
+            <td class="value">
+
+                <t:dictSelect id="devFlag" field="devFlag" typeGroupCode="dev_flag" hasLabel="false" defaultVal="${user.devFlag==null?'0':(user.devFlag)}" type="radio"></t:dictSelect>
+                <span class="Validform_checktip"></span>
+            </td>
+        </tr>
 	</table>
 </t:formvalid>
 </body>

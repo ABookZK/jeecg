@@ -19,10 +19,10 @@
 		<property name="tags">
 			<map>
 				<entry key="DictData" value-ref="dictDataTag" />
+				<entry key="mutiLang" value-ref="mutiLangTag" />
 			</map>
 		</property>
 	</bean>
-	
 	<!-- FreeMarker 自定义word代码生成器 -->
 	<bean id="freemarkerWord" class="freemarker.template.Configuration">
 		<property name="templateLoader" ref="templetLoaderWord" />

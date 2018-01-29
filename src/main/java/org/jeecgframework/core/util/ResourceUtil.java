@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang.StringUtils;
 import org.jeecgframework.core.constant.DataBaseConstant;
 import org.jeecgframework.web.system.manager.ClientManager;
 import org.jeecgframework.web.system.pojo.base.Client;
@@ -45,7 +46,7 @@ public class ResourceUtil {
 	 */
 	public static Map<String, TSIcon> allTSIcons = new HashMap<String,TSIcon>();
 	/**
-	 * 动态数据源【缓存】
+	 * 动态数据源参数配置【缓存】
 	 */
 	public static Map<String, DynamicDataSourceEntity> dynamicDataSourceMap = new HashMap<String, DynamicDataSourceEntity>(); 
 	
@@ -68,7 +69,7 @@ public class ResourceUtil {
 	public static final String getSessionattachmenttitle(String sessionName) {
 		return bundle.getString(sessionName);
 	}
-	public static final TSUser getSessionUserName() {
+	public static final TSUser getSessionUser() {
 		HttpSession session = ContextHolderUtils.getSession();
 		if(ClientManager.getInstance().getClient(session.getId())!=null){
 			return ClientManager.getInstance().getClient(session.getId()).getUser();
@@ -100,16 +101,34 @@ public class ResourceUtil {
 	}
 	
 	/**
-	 * 获得请求路径
+	 * 获得请求路径【注意： 不通用】
 	 * 
 	 * @param request
 	 * @return
 	 */
 	public static String getRequestPath(HttpServletRequest request) {
-		String requestPath = request.getRequestURI() + "?" + request.getQueryString();
-		if (requestPath.indexOf("&") > -1) {// 去掉其他参数
+
+//		String requestPath = request.getRequestURI() + "?" + request.getQueryString();
+		String queryString = request.getQueryString();
+		String requestPath = request.getRequestURI();
+		if(StringUtils.isNotEmpty(queryString)){
+			requestPath += "?" + queryString;
+		}
+
+		if (requestPath.indexOf("&") > -1) {// 去掉其他参数(保留一个参数) 例如：loginController.do?login
 			requestPath = requestPath.substring(0, requestPath.indexOf("&"));
 		}
+
+		if(requestPath.indexOf("=")!=-1){
+
+			if(requestPath.indexOf(".do")!=-1){
+				requestPath = requestPath.substring(0,requestPath.indexOf(".do")+3);
+			}else{
+				requestPath = requestPath.substring(0,requestPath.indexOf("?"));
+			}
+
+		}
+
 		requestPath = requestPath.substring(request.getContextPath().length() + 1);// 去掉项目路径
 		return requestPath;
 	}
@@ -248,7 +267,7 @@ public class ResourceUtil {
 //				|| 
 		if (key.equals(DataBaseConstant.SYS_USER_CODE)
 				|| key.equals(DataBaseConstant.SYS_USER_CODE_TABLE)) {
-			returnValue = getSessionUserName().getUserName();
+			returnValue = getSessionUser().getUserName();
 		}
 		//替换为系统登录用户真实名字
 //		if (key.equals(DataBaseConstant.CREATE_NAME)
@@ -258,16 +277,19 @@ public class ResourceUtil {
 		if (key.equals(DataBaseConstant.SYS_USER_NAME)
 				|| key.equals(DataBaseConstant.SYS_USER_NAME_TABLE)
 			) {
-			returnValue =  getSessionUserName().getRealName();
+			returnValue =  getSessionUser().getRealName();
 		}
+
 		//替换为系统登录用户的公司编码
 		if (key.equals(DataBaseConstant.SYS_COMPANY_CODE)|| key.equals(DataBaseConstant.SYS_COMPANY_CODE_TABLE)) {
-			returnValue = getSessionUserName().getCurrentDepart().getOrgCode()
-					.substring(0, Integer.valueOf(getOrgCodeLengthType()));
+
+			returnValue = getSessionUser().getCurrentDepart().getOrgCode()
+					.substring(0, Integer.valueOf(getOrgCodeLengthType()) + 1);
+
 		}
 		//替换为系统用户登录所使用的机构编码
 		if (key.equals(DataBaseConstant.SYS_ORG_CODE)|| key.equals(DataBaseConstant.SYS_ORG_CODE_TABLE)) {
-			returnValue = getSessionUserName().getCurrentDepart().getOrgCode();
+			returnValue = getSessionUser().getCurrentDepart().getOrgCode();
 		}
 		//替换为当前系统时间(年月日)
 		if (key.equals(DataBaseConstant.SYS_DATE)|| key.equals(DataBaseConstant.SYS_DATE_TABLE)) {
@@ -277,10 +299,14 @@ public class ResourceUtil {
 		if (key.equals(DataBaseConstant.SYS_TIME)|| key.equals(DataBaseConstant.SYS_TIME_TABLE)) {
 			returnValue = DateUtils.formatTime();
 		}
+		//流程状态默认值（默认未发起）
+		if (key.equals(DataBaseConstant.BPM_STATUS_TABLE)|| key.equals(DataBaseConstant.BPM_STATUS_TABLE)) {
+			returnValue = "1";
+		}
 		if(returnValue!=null){returnValue = returnValue + moshi;}
 		return returnValue;
 	}
-	//---author:jg_xugj----start-----date:20151226--------for：#814 【数据权限】扩展支持写表达式，通过session取值
+
     /**
      * 获取用户session 中的变量
      * @param key
@@ -295,7 +321,7 @@ public class ResourceUtil {
 			 moshi = key.substring(key.indexOf("}")+1);
 		}
 		String returnValue = null;
-//---author:jg_xugj----start-----date:20151226--------for：修改bug 1、key.contains("${")  应改为 key.contains("#{") 2、StringUtil.isEmpty(key) 判断 不为空
+
 		if (key.contains("#{")) {
 			key = key.substring(2,key.indexOf("}"));
 		}

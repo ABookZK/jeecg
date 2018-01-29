@@ -6,6 +6,7 @@ import freemarker.template.TemplateDirectiveModel;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import org.jeecgframework.core.online.util.FreemarkerHelper;
 import org.jeecgframework.core.util.PropertiesUtil;
 import org.jeecgframework.web.cgform.common.CgAutoListConstant;
 import org.jeecgframework.web.cgform.service.config.CgFormFieldServiceI;
@@ -37,7 +38,7 @@ public class TempletContext {
 	 * PUB-生产（使用ehcache）
 	 * DEV-开发
 	 */
-	private static String _sysMode = null;
+	public static String _sysMode = null;
 	static{
 		PropertiesUtil util = new PropertiesUtil("sysConfig.properties");
 		_sysMode = util.readProperty(CgAutoListConstant.SYS_MODE_KEY);
@@ -111,6 +112,26 @@ public class TempletContext {
 			e.printStackTrace();
 		}
 		return template;
+	}
+	
+	/**
+	 * 从缓存中读取ftl模板
+	 * @param template
+	 * @param encoding
+	 * @return
+	 */
+	public void removeTemplateFromCache(String tableName){
+		try {
+			//获取版本号
+	    	String version = cgFormFieldService.getCgFormVersionByTableName(tableName);
+			//cache的键：类名.方法名.参数名
+			String cacheKey = FreemarkerHelper.class.getName()+".getTemplateFormCache."+tableName+"."+version;
+			if(ehCache!=null){
+				ehCache.remove(cacheKey);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Configuration getFreemarker() {

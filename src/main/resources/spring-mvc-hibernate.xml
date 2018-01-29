@@ -11,8 +11,10 @@
            http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd"
 	default-autowire="byName" default-lazy-init="false">
 	<!-- 自动扫描dao和service包(自动注入) -->
+	<context:component-scan base-package="org.jeecgframework.easypoi.*" />
 	<context:component-scan base-package="org.jeecgframework.core.common.dao.*" />
 	<context:component-scan base-package="org.jeecgframework.core.common.service.*" />
+	<context:component-scan base-package="org.jeecgframework.jwt.service.*"/>
 	<context:component-scan base-package="com.jeecg.*">
 			<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
 	</context:component-scan>
@@ -22,7 +24,7 @@
 	</context:component-scan>
 
 	<!-- 引入属性文件 -->
-	<context:property-placeholder location="classpath:dbconfig.properties" />
+	<context:property-placeholder location="classpath:dbconfig.properties" ignore-unresolvable="true"/>
 	<!-- 配置数据源1 -->
 	<bean name="dataSource_jeecg" class="com.alibaba.druid.pool.DruidDataSource"
 		init-method="init" destroy-method="close">
@@ -33,8 +35,9 @@
 		<property name="initialSize" value="0" />
 		<!-- 连接池最大使用连接数量 -->
 		<property name="maxActive" value="20" />
-		<!-- 连接池最大空闲 -->
+		<!-- 连接池最大空闲 
 		<property name="maxIdle" value="20" />
+		-->
 		<!-- 连接池最小空闲 -->
 		<property name="minIdle" value="5" />
 		<!-- 获取连接最大等待时间 -->
@@ -56,7 +59,7 @@
 		<!-- 打开removeAbandoned功能 -->
 		<property name="removeAbandoned" value="true" />
 		<!-- 1800秒，也就是30分钟 -->
-		<property name="removeAbandonedTimeout" value="1800" />
+		<property name="removeAbandonedTimeout" value="3600" />
 		<!-- 关闭abanded连接时输出错误日志 -->
 		<property name="logAbandoned" value="true" />
 
@@ -92,7 +95,7 @@
 				<prop key="hibernate.dialect">${hibernate.dialect}</prop>
 				<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
 				<prop key="hibernate.show_sql">false</prop>
-				<prop key="hibernate.format_sql">true</prop>
+				<prop key="hibernate.format_sql">false</prop>
 				<prop key="hibernate.temp.use_jdbc_metadata_defaults">false</prop>
 			</props>
 		</property>
@@ -100,11 +103,12 @@
 		<property name="packagesToScan">
 			<list>
 				<value>org.jeecgframework.web.system.pojo.*</value>
-				<value>org.jeecgframework.web.demo.entity.*</value>
 				<value>org.jeecgframework.web.test.entity.*</value>
+				<value>org.jeecgframework.web.autoform.*</value>
 				<value>org.jeecgframework.web.cgform.entity.*</value>
 				<value>org.jeecgframework.web.cgreport.entity.*</value>
 				<value>org.jeecgframework.web.cgdynamgraph.entity.*</value>
+				<value>org.jeecgframework.web.graphreport.entity.*</value>
 				<value>org.jeecgframework.web.system.sms.*</value>
 				<value>com.jeecg.*</value>
 			</list>

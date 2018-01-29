@@ -1,4 +1,21 @@
-﻿//﻿var jq = jQuery.noConflict();
+﻿﻿// update--begin--author:zhangjiaqiang date:20170621 for:如何避免console.log引起javascript的兼容问题 
+if(!window.console){
+    window.console = {};
+}
+if(!window.console.log){
+    window.console.log = function(msg){};
+}
+
+var basePath;
+try{
+	var local = window.location;  
+	var contextPath = local.pathname.split("/")[1];  
+	basePath = local.protocol+"//"+local.host+"/"+contextPath;
+	//alert(basePath);
+}catch(e){}
+
+
+//﻿var jq = jQuery.noConflict();
 /**
  * 增删改工具栏
  */
@@ -22,14 +39,18 @@ try {
 function getzIndex(flag){
 	var zindexNumber = getCookie("ZINDEXNUMBER");
 	if(zindexNumber == null){
-		setCookie("ZINDEXNUMBER",1980);
-		zindexNumber = 1980;
+		zindexNumber = 2010;
+		setCookie("ZINDEXNUMBER",zindexNumber);
+		//zindexNumber = 1980;
 	}else{
+		if(zindexNumber < 2010){
+			zindexNumber = 2010;
+		}
 		var n = flag?zindexNumber:parseInt(zindexNumber) + parseInt(10);
 		setCookie("ZINDEXNUMBER",n);
 	}
 	return zindexNumber;
-}
+} 
 
 function upload(curform) {
 	upload();
@@ -61,6 +82,7 @@ function addTreeNode(title,addurl,gname) {
  * @param addurl//目标页面地址
  * @param id//主键字段
  */
+
 function update(title,url, id,width,height,isRestful) {
 	gridname=id;
 	var rowsData = $('#'+id).datagrid('getSelections');
@@ -80,6 +102,7 @@ function update(title,url, id,width,height,isRestful) {
 	}
 	createwindow(title,url,width,height);
 }
+
 
 /**
  * 如果页面是详细查看页面，无效化所有表单元素，只能进行查看
@@ -182,6 +205,7 @@ function createdetailwindow(title, addurl,width,height) {
 		    cancel: true /*为true等价于function(){}*/
 		});
 	}else{
+
 		W.$.dialog({
 			content: 'url:'+addurl,
 			zIndex: getzIndex(),
@@ -193,8 +217,12 @@ function createdetailwindow(title, addurl,width,height) {
 			opacity : 0.3,
 			cache:false, 
 		    cancelVal: 'Close',
-		    cancel: true /*为true等价于function(){}*/
+		    cancel: function(){
+		    	windowapi.zindex();
+		    }
+			//true /*为true等价于function(){}*/
 		});
+
 	}
 	
 }
@@ -211,7 +239,11 @@ function editfs(title,url) {
 		return;
 	}
 	url += '&id='+rowid;
-	openwindow(title,url,name,800,500);
+
+	width = window.top.document.body.offsetWidth;
+	height =window.top.document.body.offsetHeight-100;
+	openwindow(title,url,name,width,height);
+
 }
 // 删除调用函数
 function delObj(url,name) {
@@ -251,9 +283,11 @@ function deluploadify(url, id) {
 	});
 }
 // 普通询问操作调用函数
-function confirm(url, content,name) {
+
+function confirm(url, content,name,noShade) {
 	createdialog('Tip Message ', content, url,name);
 }
+
 /**
  * Tip Message
  */
@@ -267,15 +301,73 @@ function tip_old(msg) {
 function tip(msg) {
 	try{
 		$.dialog.setting.zIndex = getzIndex(true);
-		$.messager.show({
-			title : 'Tip Message',
-			msg : msg,
-			timeout : 1000 * 6
-		});
+//		$.messager.show({
+//			title : 'Tip Message',
+//			msg : msg,
+//			timeout : 1000 * 6
+//		});
+
+		var navigatorName = "Microsoft Internet Explorer"; 
+
+		if(navigator.appName == navigatorName||"default,shortcut".indexOf(getCookie("JEECGINDEXSTYLE"))>=0){
+
+			$.messager.show({
+				title : 'Tip Message',
+				msg : msg,
+				timeout : 1000 * 6
+			});
+		}else{
+			var icon = 7;
+			if(msg.indexOf("success") > -1){
+				icon = 1;
+			}else if(msg.indexOf("fail") > -1){
+				icon = 2;
+			}
+			layer.open({
+				title:'Tip Message',
+				offset:'rb',
+				content:msg,
+				time:3000,
+				btn:false,
+				shade:false,
+				icon:icon,
+				shift:2
+			});
+		}
+
 	}catch(e){
 		alertTipTop(msg,'10%');
 	}
 }
+
+/**
+ * Layer风格alert提示
+ */
+function alerLayerTip(msg) {
+	if(msg==null || msg==''){
+		msg = "系统异常，请看系统日志!";
+	}
+	try{
+		var navigatorName = "Microsoft Internet Explorer"; 
+
+		if( navigator.appName == navigatorName ||"default,shortcut".indexOf(getCookie("JEECGINDEXSTYLE"))>=0){
+
+			$.messager.alert('提示信息',msg);
+		}else{
+			layer.open({
+				title:'提示信息',
+				content:msg,
+				time:6000,
+				btn:false,
+				shade:false,
+				icon:2
+			});
+		}
+	}catch(e){
+		alert(msg);
+	}
+}
+
 /**
  * Tip Message像alert一样 定位顶部的位置
  */
@@ -339,7 +431,8 @@ function createwindow(title, addurl,width,height) {
 		    cancel: true /*为true等价于function(){}*/
 		});
 	}else{
-		W.$.dialog({
+
+		/*W.*/$.dialog({//使用W，即为使用顶级页面作为openner，造成打开的次级窗口获取不到关联的主窗口
 			content: 'url:'+addurl,
 			lock : true,
 			width:width,
@@ -357,6 +450,7 @@ function createwindow(title, addurl,width,height) {
 		    cancelVal: 'Close',
 		    cancel: true /*为true等价于function(){}*/
 		});
+
 	}
     //--author：JueYue---------date：20140427---------for：弹出bug修改,设置了zindex()函数
 	
@@ -434,6 +528,12 @@ function opensearchdwin(title, url, width, height) {
  * @param saveurl
  */
 function openwindow(title, url,name, width, height) {
+
+	if(width=="100%" || height=="100%"){
+		width = window.top.document.body.offsetWidth;
+		height =window.top.document.body.offsetHeight-100;
+	}
+
 	gridname=name;
 	if (typeof (width) == 'undefined'&&typeof (height) != 'undefined')
 	{
@@ -545,13 +645,36 @@ function openwindow(title, url,name, width, height) {
  * @param content
  * @param url
  */
-function createdialog(title, content, url,name) {
+
+function createdialog(title, content, url,name,noShade) {
 	$.dialog.setting.zIndex = getzIndex(true);
-	$.dialog.confirm(content, function(){
-		doSubmit(url,name);
-		rowid = '';
-	}, function(){
-	});
+
+	var navigatorName = "Microsoft Internet Explorer"; 
+
+	if( navigator.appName == navigatorName ||"default,shortcut".indexOf(getCookie("JEECGINDEXSTYLE"))>=0){
+
+		$.dialog.confirm(content, function(){
+			doSubmit(url,name);
+			rowid = '';
+		}, function(){
+		});
+	}else{
+		layer.open({
+			title:title,
+			content:content,
+			icon:7,
+			shade: !noShade?0.3:0,
+			yes:function(index){
+				doSubmit(url,name);
+				rowid = '';
+			},
+			btn:['ok','cancel'],
+			btn2:function(index){
+				layer.close(index);
+			}
+		});
+	}
+
 }
 /**
  * 执行保存
@@ -796,6 +919,12 @@ function addOneTab(subtitle, url, icon) {
 		var id = "";
 		id = createTabId(subtitle);
 		window.top.addTabs({id:id,title:subtitle,close: true,url: url});
+
+	}else if(indexStyle=='fineui'){
+		var id = "";
+		id = createTabId(subtitle);
+		window.top.addFineuiTab({id:id,title:subtitle,close: true,url: url});
+
 	}else{
 		if (icon == '') {
 			icon = 'icon folder';
@@ -865,14 +994,16 @@ function closetab(title) {
 //popup  
 //object: this  name:需要选择的列表的字段  code:动态报表的code
 function inputClick(obj,name,code) {
-	 $.dialog.setting.zIndex = getzIndex(true);
 	 if(name==""||code==""){
 		 alert("Popup parameter not prepare");
 		 return;
 	 }
+
+	 var inputClickUrl = basePath + "/cgReportController.do?popup&id="+code;
+
 	 if(typeof(windowapi) == 'undefined'){
 		 $.dialog({
-				content: "url:cgReportController.do?popup&id="+code,
+				content: "url:"+inputClickUrl,
 				zIndex: getzIndex(),
 				lock : true,
 				title:"Select",
@@ -905,7 +1036,7 @@ function inputClick(obj,name,code) {
 			});
 		}else{
 			$.dialog({
-				content: "url:cgReportController.do?popup&id="+code,
+				content: "url:"+inputClickUrl,
 				zIndex: getzIndex(),
 				lock : true,
 				title:"Select",
@@ -1052,8 +1183,14 @@ function JeecgExcelExport(url,datagridId){
 		if(val.field != 'opt'){
 			fields+=val.field+',';
 		}
-	}); 
-	window.location.href = url+ encodeURI(fields+params);
+	});
+
+    var id='&id=';
+    $.each($('#'+ datagridId).datagrid('getSelections'), function(i, val){
+        id+=val.id+",";
+    });
+    window.location.href = url+ encodeURI(fields+params+id);
+
 }
 /**
  * 自动完成的解析函数
@@ -1116,3 +1253,324 @@ function viewNotCreateWin(title,url, id,isRestful)
 	window.location.href=url
 }
 //add--end--Author:xugj date:20160531 for: TASK #1089 【demo】针对jeecgdemo，实现一个新的页面方式
+
+//add--start--Author:gengjiajia date:20160802 for: TASK #1175 批量添加数据的时popup多值的传递
+//popup  
+//object: pobj当前操作的文本框. tablefield:对应字典TEXT,要从popup报表中获取的字段.inputnames:对应字典CODE,当前需要回填数据的文本框名称. pcode:动态报表的code
+function popupClick(pobj,tablefield,inputnames,pcode) {
+	 $.dialog.setting.zIndex = getzIndex(true);
+	 if(inputnames==""||pcode==""){
+		 alert("popup参数配置不全");
+		 return;
+	 }
+	 if(typeof(windowapi) == 'undefined'){
+		 $.dialog({
+				content: "url:cgReportController.do?popup&id="+pcode,
+				zIndex: getzIndex(),
+				lock : true,
+				title:"选择",
+				width:800,
+				height: 400,
+				cache:false,
+			    ok: function(){
+			    	iframe = this.iframe.contentWindow;
+			    	var selected = iframe.getSelectRows();
+			    	if (selected == '' || selected == null ){
+				    	alert("请选择");
+			    		return false;
+				    }else {
+				    	//对应数据库字段不为空的情况下,根据表单中字典TEXT的值来取popup的值
+				    	if(tablefield != "" && tablefield != null){
+					    	var fields = tablefield.split(",");
+					    	var inputfield = inputnames.split(",");
+					    	for(var i1=0;i1<fields.length;i1++){
+							   var str = "";
+						    	$.each( selected, function(i, n){ 
+						    		if (i==0)
+								    	str+= n[fields[i1]];
+							    	else{
+										str+= ",";
+										str+=n[fields[i1]];
+									}
+								 });
+						    	var inputname = $(pobj).attr("name"); 
+						    	var inputs = inputname.split(".");
+						    	//判断传入的this格式是否为 "AA[#index#].aa"的形式
+						    	if(str.indexOf("undefined")==-1){
+						    		if(inputs.length>1){
+						    			﻿//update--begin--author:scott date:20171031 for:TASK #2385 online和代码生成器 一对多行popup多字段赋值问题解决-----------
+						    			var inpu = inputs[0]+"."+inputfield[i1];
+						    			﻿//update--end--author:scott date:20171031 for:TASK #2385 online和代码生成器 一对多行popup多字段赋值问题解决------------- 
+						    			$("input[name='"+inpu+"']").val(str);
+						    		}else{
+						    			$("input[name='"+inputfield[i1]+"']").val(str);
+						    		}
+						    	}else{
+						    		if(inputs.length>1){
+						    			﻿//update--begin--author:scott date:20171031 for:TASK #2385 online和代码生成器 一对多行popup多字段赋值问题解决-----------
+						    			var inpu = inputs[0]+"."+inputfield[i1];
+						    			﻿//update--end--author:scott date:20171031 for:TASK #2385 online和代码生成器 一对多行popup多字段赋值问题解决-----------
+						    			$("input[name='"+inpu+"']").val("");
+						    		}else{
+						    			$("input[name='"+inputfield[i1]+"']").val("");
+						    		}
+						    	}
+					    	}
+				    	}else{
+				    		//对应数据库字段为空的情况下并且字典CODE传入多个值时，根据表单中字典CODE的值从popup中来取值
+				    		var inputfield = inputnames.split(",");
+				    		if(inputfield.length>1){
+				    			for(var i1=0;i1<inputfield.length;i1++){
+									   var str = "";
+								    	$.each( selected, function(i, n){ 
+							    			if (i==0)
+							    				str+= n[inputfield[i1]];
+							    			else{
+							    				str+= ",";
+							    				str+=n[inputfield[i1]];
+							    			}
+										 });
+								    	var inputname = $(pobj).attr("name"); 
+								    	var inputs = inputname.split(".");
+								    	if(str.indexOf("undefined")==-1){
+								    		if(inputs.length>1){
+								    			﻿//update--begin--author:scott date:20171031 for:TASK #2385 online和代码生成器 一对多行popup多字段赋值问题解决-----------
+								    			var inpu = inputs[0]+"."+inputfield[i1];
+								    			﻿//update--end--author:scott date:20171031 for:TASK #2385 online和代码生成器 一对多行popup多字段赋值问题解决-----------
+								    			$("input[name='"+inpu+"']").val(str);
+								    		}else{
+								    			$("input[name='"+inputfield[i1]+"']").val(str);
+								    		}
+								    	}else{
+								    		if(inputs.length>1){
+								    			﻿//update--begin--author:scott date:20171031 for:TASK #2385 online和代码生成器 一对多行popup多字段赋值问题解决-----------
+								    			var inpu = inputs[0]+"."+inputfield[i1];
+								    			﻿//update--end--author:scott date:20171031 for:TASK #2385 online和代码生成器 一对多行popup多字段赋值问题解决-----------
+								    			$("input[name='"+inpu+"']").val("");
+								    		}else{
+								    			$("input[name='"+inputfield[i1]+"']").val("");
+								    		}
+								    	}
+							    	}
+				    		}else{
+				    			//对应数据库字段为空的情况下并且字典CODE传入一个值时，根据表单中字典TEXT的值从popup中来取值
+				    			 var str = "";
+						    	$.each( selected, function(i, n){
+							    	if (i==0)
+							    	str+= n[inputfield];
+							    	else
+						    		str+= ","+n[inputfield];
+						    	});
+						    	var inputname = $(pobj).attr("name"); 
+						    	var inputs = inputname.split(".");
+						    	if(str.indexOf("undefined")==-1){
+						    		if(inputs.length>1){
+						    			var inpu = inputs[i1]+"."+inputfield[i1];
+						    			$("input[name='"+inpu+"']").val(str);
+						    		}else{
+						    			$("input[name='"+inputfield+"']").val(str);
+						    		}
+						    	}else{
+						    		if(inputs.length>1){
+						    			var inpu = inputs[i1]+"."+inputfield[i1];
+						    			$("input[name='"+inpu+"']").val("");
+						    		}else{
+						    			$("input[name='"+inputfield+"']").val("");
+						    		}
+						    	}
+				    		}
+				    	}
+				    	return true;
+				    }
+					
+			    },
+			    cancelVal: '关闭',
+			    cancel: true // 为true等价于function(){}
+			});
+		}else{
+			$.dialog({
+				content: "url:cgReportController.do?popup&id="+pcode,
+				zIndex: getzIndex(),
+				lock : true,
+				title:"选择",
+				width:800,
+				height: 400,
+				parent:windowapi,
+				cache:false,
+			    ok: function(){
+			    	iframe = this.iframe.contentWindow;
+			    	var selected = iframe.getSelectRows();
+			    	if (selected == '' || selected == null ){
+				    	alert("请选择");
+			    		return false;
+				    }else {
+				    	//对应数据库字段不为空的情况下,根据表单中字典TEXT的值来取popup的值
+				    	if(tablefield != "" && tablefield != null){
+					    	var fields = tablefield.split(",");
+					    	var inputfield = inputnames.split(",");
+					    	for(var i1=0;i1<fields.length;i1++){
+							   var str = "";
+						    	$.each( selected, function(i, n){ 
+						    		if (i==0)
+								    	str+= n[fields[i1]];
+							    	else{
+										str+= ",";
+										str+=n[fields[i1]];
+									}
+								 });
+						    	var inputname = $(pobj).attr("name"); 
+						    	var inputs = inputname.split(".");
+						    	//判断传入的this格式是否为 "AA[#index#].aa"的形式
+						    	if(str.indexOf("undefined")==-1){
+						    		if(inputs.length>1){
+						    			var inpu = inputs[i1]+"."+inputfield[i1];
+						    			$("input[name='"+inpu+"']").val(str);
+						    		}else{
+						    			$("input[name='"+inputfield[i1]+"']").val(str);
+						    		}
+						    	}else{
+						    		if(inputs.length>1){
+						    			var inpu = inputs[i1]+"."+inputfield[i1];
+						    			$("input[name='"+inpu+"']").val("");
+						    		}else{
+						    			$("input[name='"+inputfield[i1]+"']").val("");
+						    		}
+						    	}
+					    	}
+				    	}else{
+				    		//对应数据库字段为空的情况下并且字典CODE传入多个值时，根据表单中字典CODE的值从popup中来取值
+				    		var inputfield = inputnames.split(",");
+				    		if(inputfield.length>1){
+				    			for(var i1=0;i1<inputfield.length;i1++){
+									   var str = "";
+								    	$.each( selected, function(i, n){ 
+							    			if (i==0)
+							    				str+= n[inputfield[i1]];
+							    			else{
+							    				str+= ",";
+							    				str+=n[inputfield[i1]];
+							    			}
+										 });
+								    	var inputname = $(pobj).attr("name"); 
+								    	var inputs = inputname.split(".");
+								    	if(str.indexOf("undefined")==-1){
+								    		if(inputs.length>1){
+								    			var inpu = inputs[i1]+"."+inputfield[i1];
+								    			$("input[name='"+inpu+"']").val(str);
+								    		}else{
+								    			$("input[name='"+inputfield[i1]+"']").val(str);
+								    		}
+								    	}else{
+								    		if(inputs.length>1){
+								    			var inpu = inputs[i1]+"."+inputfield[i1];
+								    			$("input[name='"+inpu+"']").val("");
+								    		}else{
+								    			$("input[name='"+inputfield[i1]+"']").val("");
+								    		}
+								    	}
+							    	}
+				    		}else{
+				    			//对应数据库字段为空的情况下并且字典CODE传入一个值时，根据表单中字典TEXT的值从popup中来取值
+				    			 var str = "";
+						    	$.each( selected, function(i, n){
+							    	if (i==0)
+							    	str+= n[inputfield];
+							    	else
+						    		str+= ","+n[inputfield];
+						    	});
+						    	var inputname = $(pobj).attr("name"); 
+						    	var inputs = inputname.split(".");
+						    	if(str.indexOf("undefined")==-1){
+						    		if(inputs.length>1){
+						    			var inpu = inputs[i1]+"."+inputfield[i1];
+						    			$("input[name='"+inpu+"']").val(str);
+						    		}else{
+						    			$("input[name='"+inputfield+"']").val(str);
+						    		}
+						    	}else{
+						    		if(inputs.length>1){
+						    			var inpu = inputs[i1]+"."+inputfield[i1];
+						    			$("input[name='"+inpu+"']").val("");
+						    		}else{
+						    			$("input[name='"+inputfield+"']").val("");
+						    		}
+						    	}
+				    		}
+				    	}
+				    	return true;
+				    }
+					
+			    },
+			    cancelVal: '关闭',
+			    cancel: true // 为true等价于function(){}
+			});
+		}
+	}
+//add--end--Author:gengjiajia date:20160802 for: TASK #1175 批量添加数据的时popup多值的传递
+
+/*
+ * 鼠标放在图片上方，显示大图
+ */
+var bigImgIndex = null;
+function tipImg(obj){
+	try{
+		var navigatorName = "Microsoft Internet Explorer"; 
+		if( navigator.appName != navigatorName ){ 
+			if(obj.nodeName == 'IMG'){
+				var e = window.event;
+				var x = e.clientX+document.body.scrollLeft + document.documentElement.scrollLeft
+				var y = e.clientY+document.body.scrollTop + document.documentElement.scrollTop 
+				var src = obj.src;
+				var width = obj.naturalWidth;
+				var height = obj.naturalHeight;
+				bigImgIndex = layer.open({
+					content:[src,'no'],
+					type:2,
+					offset:[y+"px",x+"px"],
+					title:false,
+					area:[width+"px",height+"px"],
+					shade:0,
+					closeBtn:0
+				});
+			}
+		}
+	}catch(e){
+		
+	}
+	
+}
+
+function moveTipImg(){
+	try{
+		if(bigImgIndex != null){
+			layer.close(bigImgIndex);
+		}
+	}catch(e){
+		
+	}
+}
+function treeFormater(value,row,index){
+	if(value != null && value != ''){
+			var result = $.ajax({
+				url:'categoryController.do?tree',
+				type:'POST',
+				dataType:'JSON',
+				data:{
+					selfCode:value
+				},
+				async:false
+			});
+		var responseText = result.responseText;
+		if(typeof responseText == 'string'){
+			responseText = JSON.parse(responseText);
+		}
+		if(responseText.length != undefined && responseText.length > 0 && responseText[0].text != undefined){
+			return responseText[0].text;
+		}
+		else
+			return value;
+		}else{
+			return value;
+		}
+}
+//<!-- update-begin-author:zhangjiaqiang date:20170815 for:TASK #2274 【online】Online 表单支持树控件 -->

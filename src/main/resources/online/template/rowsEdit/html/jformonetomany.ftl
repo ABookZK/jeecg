@@ -63,7 +63,9 @@
 										<input id="${sub}[${subTableData_index}].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[${subTableData_index}].${subTableField.field_name}" type="text"
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px" class="form-control" value="${subTableData['${subTableField.field_name}']?if_exists?html}"
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								                <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
@@ -79,7 +81,9 @@
 										<input id="${sub}[${subTableData_index}].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[${subTableData_index}].${subTableField.field_name}"  type="password"
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px" class="form-control" value="${subTableData['${subTableField.field_name}']?if_exists?html}"
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
@@ -111,7 +115,11 @@
 								               
 									<#elseif subTableField.show_type=='list'>
 										<@DictData name="${subTableField.dict_field?if_exists?html}" text="${subTableField.dict_text?if_exists?html}" tablename="${subTableField.dict_table?if_exists?html}" var="dataList">
-											<select id="${sub}[${subTableData_index}].${subTableField.field_name}" ${subTableField.extend_json?if_exists} class="form-control" name="${sub}[${subTableData_index}].${subTableField.field_name}" <#if subTableField.is_null != 'Y'>datatype="*"</#if>>
+											<select id="${sub}[${subTableData_index}].${subTableField.field_name}" ${subTableField.extend_json?if_exists} class="form-control" name="${sub}[${subTableData_index}].${subTableField.field_name}" 
+											<#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+											<#if subTableField.is_null != 'Y'>datatype="*"</#if>>
 												<#list dataList as dictdata> 
 												<option value="${dictdata.typecode?if_exists?html}" 
 												<#if dictdata.typecode?if_exists?html=="${subTableData['${subTableField.field_name}']?if_exists?html}"> selected="selected" </#if>>
@@ -126,7 +134,9 @@
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px"  value="${subTableData['${subTableField.field_name}']?if_exists?html}"
 										       class="form-control" onClick="WdatePicker()" 
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
@@ -138,7 +148,9 @@
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px"  value="${subTableData['${subTableField.field_name}']?if_exists?html}"
 										       class="form-control" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})"
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
@@ -151,29 +163,39 @@
 										       onClick="inputClick(this,'${subTableField.dict_text?if_exists?html}','${subTableField.dict_table?if_exists?html}');" 
 										       value="${subTableData['${subTableField.field_name}']?if_exists?html}"
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
 				               					<#if subTableField.is_null != 'Y'>datatype="*"</#if>
 								               </#if>>
 									
-									<#elseif subTableField.show_type=='file'>
-										<input id="${sub}[${subTableData_index}].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[${subTableData_index}].${subTableField.field_name}" type="text"
+									<#elseif subTableField.show_type=='file' || subTableField.show_type=='image'>
+											<#-- update--begin--author:zhangjiaqiang date:20170607 for：优化上传插件功能 -->
+										<input id="${sub}[${subTableData_index}].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[${subTableData_index}].${subTableField.field_name}" type="hidden"
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px" class="form-control" value="${subTableData['${subTableField.field_name}']?if_exists?html}"
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
 					          					<#if subTableField.is_null != 'Y'>datatype="*"</#if>
 								               </#if>>
-								               
+											   <input class="ui-button" type="button" value="上传附件"
+															onclick="commonUpload(commonUploadDefaultCallBack,'${sub}[${subTableData_index}].${subTableField.field_name}')"/> 
+								                 <a  target="_blank" id="${sub}[${subTableData_index}].${subTableField.field_name}_href"  <#if subTableData['${subTableField.field_name}']?if_exists?html != ''>href="${subTableData['${subTableField.field_name}']?if_exists?html}">下载<#else>>未上传</#if></a>
+											<#-- update--begin--author:zhangjiaqiang date:20170607 for：优化上传插件功能 -->
 									<#else>
 										<input id="${sub}[${subTableData_index}].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[${subTableData_index}].${subTableField.field_name}" type="text"
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px" class="form-control" value="${subTableData['${subTableField.field_name}']?if_exists?html}"
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
@@ -206,7 +228,9 @@
 										<input id="${sub}[0].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[0].${subTableField.field_name}" type="text"
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px" class="form-control"
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
@@ -222,7 +246,9 @@
 										<input id="${sub}[0].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[0].${subTableField.field_name}"  type="password"
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px" class="form-control" 
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
@@ -232,7 +258,8 @@
 									<#elseif subTableField.show_type=='radio'>
 								        <@DictData name="${subTableField.dict_field?if_exists?html}" text="${subTableField.dict_text?if_exists?html}" tablename="${subTableField.dict_table?if_exists?html}" var="dataList">
 											<#list dataList as dictdata> 
-											<input value="${dictdata.typecode?if_exists?html}" ${subTableField.extend_json?if_exists} name="${sub}[0].${subTableField.field_name}" type="radio" <#if subTableField.is_null != 'Y'>datatype="*"</#if> >
+											<input value="${dictdata.typecode?if_exists?html}" ${subTableField.extend_json?if_exists} name="${sub}[0].${subTableField.field_name}" type="radio" 
+											<#if subTableField.is_null != 'Y'>datatype="*"</#if> >
 												${dictdata.typename?if_exists?html}
 											</#list> 
 										</@DictData>
@@ -240,14 +267,19 @@
 									<#elseif subTableField.show_type=='checkbox'>
 										<@DictData name="${subTableField.dict_field?if_exists?html}" text="${subTableField.dict_text?if_exists?html}" tablename="${subTableField.dict_table?if_exists?html}" var="dataList">
 											<#list dataList as dictdata> 
-											<input value="${dictdata.typecode?if_exists?html}" ${subTableField.extend_json?if_exists} name="${sub}[0].${subTableField.field_name}" type="checkbox" <#if subTableField.is_null != 'Y'>datatype="*"</#if>>
+											<input value="${dictdata.typecode?if_exists?html}" ${subTableField.extend_json?if_exists} name="${sub}[0].${subTableField.field_name}" type="checkbox" 
+											<#if subTableField.is_null != 'Y'>datatype="*"</#if>>
 												${dictdata.typename?if_exists?html}
 											</#list> 
 										</@DictData>
 								               
 									<#elseif subTableField.show_type=='list'>
 										<@DictData name="${subTableField.dict_field?if_exists?html}" text="${subTableField.dict_text?if_exists?html}" tablename="${subTableField.dict_table?if_exists?html}" var="dataList">
-											<select id="${sub}[0].${subTableField.field_name}" ${subTableField.extend_json?if_exists} class="form-control" name="${sub}[0].${subTableField.field_name}" <#if subTableField.is_null != 'Y'>datatype="*"</#if> >
+											<select id="${sub}[0].${subTableField.field_name}" ${subTableField.extend_json?if_exists} class="form-control" name="${sub}[0].${subTableField.field_name}" 
+											<#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+											<#if subTableField.is_null != 'Y'>datatype="*"</#if> >
 												<#list dataList as dictdata> 
 												<option value="${dictdata.typecode?if_exists?html}" >
 													${dictdata.typename?if_exists?html}
@@ -261,7 +293,9 @@
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px"  
 										       class="form-control" onClick="WdatePicker()" 
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
@@ -273,7 +307,9 @@
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px"  
 										       class="form-control" onClick="WdatePicker({dateFmt:'yyyy-MM-dd HH:mm:ss'})"
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
@@ -285,29 +321,39 @@
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px" class="form-control searchbox-inputtext15" 
 										       onClick="inputClick(this,'${subTableField.dict_text?if_exists?html}','${subTableField.dict_table?if_exists?html}');" 
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
 					               				<#if subTableField.is_null != 'Y'>datatype="*"</#if>
 								               </#if>>
 									
-									<#elseif subTableField.show_type=='file'>
-										<input id="${sub}[0].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[0].${subTableField.field_name}" type="text"
+									<#elseif subTableField.show_type=='file' || subTableField.show_type=='image'>
+										<#-- update--begin--author:zhangjiaqiang date:20170607 for:优化上传功能 -->
+										<input id="${sub}[0].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[0].${subTableField.field_name}" type="hidden"
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px" class="form-control" 
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>
 					               				<#if subTableField.is_null != 'Y'>datatype="*"</#if>
 								               </#if>>
-								               
+										<input class="ui-button" type="button" value="上传附件" width="50px"
+															onclick="commonUpload(commonUploadDefaultCallBack,'${sub}[0].${subTableField.field_name}')"/>
+								                      <a  target="_blank" id="${sub}[0].${subTableField.field_name}_href"></a>
+								            <#-- update--end--author:zhangjiaqiang date:20170607 for:优化上传功能 -->   
 									<#else>
 										<input id="${sub}[0].${subTableField.field_name}" ${subTableField.extend_json?if_exists} name="${sub}[0].${subTableField.field_name}" type="text"
 										       style="width: ${(subTableField.field_length==0)?string(150, subTableField.field_length)}px" class="form-control"
 								               nullmsg="请输入${subTableField.content}！"
-								               
+								               <#-- update--begin--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
+												<#if subTableField.field_must_input?if_exists?html != ''><#if subTableField.field_must_input == 'Y' || subTableField.is_null != 'Y'>ignore="checked"<#else>ignore="ignore"</#if><#elseif subTableField.is_null != "Y">ignore="checked"<#else>ignore="ignore"</#if>
+												<#-- update--end--author:zhangjiaqiang Date:20170417 for:增加校验必填项 -->
 								               <#if subTableField.field_valid_type?if_exists?html != ''>
 								               datatype="${subTableField.field_valid_type?if_exists?html}"
 								               <#else>

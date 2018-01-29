@@ -10,10 +10,10 @@ import net.sf.ehcache.Element;
 
 import org.apache.commons.lang.StringUtils;
 import org.jeecgframework.codegenerate.database.JeecgReadTable;
+import org.jeecgframework.core.online.util.FreemarkerHelper;
 import org.jeecgframework.core.util.PropertiesUtil;
 import org.jeecgframework.core.util.oConvertUtils;
 import org.jeecgframework.web.cgform.common.CgAutoListConstant;
-import org.jeecgframework.web.cgform.engine.FreemarkerHelper;
 import org.jeecgframework.web.cgform.entity.config.CgFormHeadEntity;
 import org.jeecgframework.web.cgform.service.build.DataBaseService;
 import org.jeecgframework.web.cgform.service.cgformftl.CgformFtlServiceI;

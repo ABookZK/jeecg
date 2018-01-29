@@ -1,7 +1,6 @@
 package org.jeecgframework.web.system.service;
 
 import org.jeecgframework.core.common.service.CommonService;
-
 import org.jeecgframework.web.system.pojo.base.TSUser;
 /**
  * 
@@ -11,6 +10,7 @@ import org.jeecgframework.web.system.pojo.base.TSUser;
 public interface UserService extends CommonService{
 
 	public TSUser checkUserExits(TSUser user);
+	public TSUser checkUserExits(String username,String password);
 	public String getUserRole(TSUser user);
 	public void pwdInit(TSUser user, String newPwd);
 	/**
@@ -21,4 +21,19 @@ public interface UserService extends CommonService{
 	 *@return
 	 */
 	public int getUsersOfThisRole(String id);
+	
+	/**
+	 * 物理删除用户
+	 * @param user
+	 */
+	public String trueDel(TSUser user);
+
+	/**
+	 * 添加或者修改用户，添加用户组织机构关联表，用户角色关联表
+	 * @param user
+	 * @param orgIds
+	 * @param roleIds
+	 */
+	public void saveOrUpdate(TSUser user, String[] orgIds, String[] roleIds);
+
 }

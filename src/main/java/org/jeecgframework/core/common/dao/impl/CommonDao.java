@@ -70,6 +70,23 @@ public class CommonDao extends GenericBaseCommonDao implements ICommonDao, IGene
 	}
 	
 	/**
+	 * 检查用户是否存在
+	 * */
+	public TSUser findUserByAccountAndPassword(String username,String inpassword) {
+		String password = PasswordUtil.encrypt(username, inpassword, PasswordUtil.getStaticSalt());
+		String query = "from TSUser u where u.userName = :username and u.password=:passowrd";
+		Query queryObject = getSession().createQuery(query);
+		queryObject.setParameter("username", username);
+		queryObject.setParameter("passowrd", password);
+		@SuppressWarnings("unchecked")
+		List<TSUser> users = queryObject.list();
+		if (users != null && users.size() > 0) {
+			return users.get(0);
+		}
+		return null;
+	}
+	
+	/**
 	 * admin账户初始化
 	 */
 	public void pwdInit(TSUser user,String newPwd){
@@ -528,11 +545,9 @@ public class CommonDao extends GenericBaseCommonDao implements ICommonDao, IGene
 				for (Object inobj : in) {
 					ReflectHelper reflectHelper2 = new ReflectHelper(inobj);
 					String inId = oConvertUtils.getString(reflectHelper2.getMethodValue(comboTreeModel.getIdField()));
-
                     if (inId.equals(id)) {
 						tree.setChecked(true);
 					}
-
 				}
 			}
 		}
@@ -651,10 +666,14 @@ public class CommonDao extends GenericBaseCommonDao implements ICommonDao, IGene
                     tg.getFieldMap().put(entry.getKey(), fieldValue);
                 }
             }
-
             if (treeGridModel.getFunctionType() != null) {
             	String functionType = oConvertUtils.getString(reflectHelper.getMethodValue(treeGridModel.getFunctionType()));
             	tg.setFunctionType(functionType);
+            }
+
+            if(treeGridModel.getIconStyle() != null){
+            	String iconStyle = oConvertUtils.getString(reflectHelper.getMethodValue(treeGridModel.getIconStyle()));
+            	tg.setIconStyle(iconStyle);
             }
 
 			treegrid.add(tg);

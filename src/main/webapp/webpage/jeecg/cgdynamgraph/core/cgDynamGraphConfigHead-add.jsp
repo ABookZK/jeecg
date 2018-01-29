@@ -5,7 +5,6 @@
 <head>
 <title>动态报表配置抬头</title>
 <t:base type="jquery,easyui,tools,DatePicker"></t:base>
-<script type="text/javascript" src="plug-in/ckfinder/ckfinder.js"></script>
 <script type="text/javascript">
   $(document).ready(function(){
 	$('#tt').tabs({
@@ -55,31 +54,6 @@
 			});
 		});
 	}
-	function browseImages(inputId, Img) {// 图片管理器，可多个上传共用
-		var finder = new CKFinder();
-		finder.selectActionFunction = function(fileUrl, data) {//设置文件被选中时的函数 
-			$("#" + Img).attr("src", fileUrl);
-			$("#" + inputId).attr("value", fileUrl);
-		};
-		finder.resourceType = 'Images';// 指定ckfinder只为图片进行管理
-		finder.selectActionData = inputId; //接收地址的input ID
-		finder.removePlugins = 'help';// 移除帮助(只有英文)
-		finder.defaultLanguage = 'zh-cn';
-		finder.popup();
-	}
-	function browseFiles(inputId, file) {// 文件管理器，可多个上传共用
-		var finder = new CKFinder();
-		finder.selectActionFunction = function(fileUrl, data) {//设置文件被选中时的函数 
-			$("#" + file).attr("href", fileUrl);
-			$("#" + inputId).attr("value", fileUrl);
-			decode(fileUrl, file);
-		};
-		finder.resourceType = 'Files';// 指定ckfinder只为文件进行管理
-		finder.selectActionData = inputId; //接收地址的input ID
-		finder.removePlugins = 'help';// 移除帮助(只有英文)
-		finder.defaultLanguage = 'zh-cn';
-		finder.popup();
-	}
 	function decode(value, id) {//value传入值,id接受值
 		var last = value.lastIndexOf("/");
 		var filename = value.substring(last + 1, value.length);
@@ -120,7 +94,7 @@
 			<td class="value" colspan="3"><t:dictSelect field="dataStructure" typeGroupCode="fieldtype" hasLabel="false"/> <span class="Validform_checktip"></span></td>
         </tr>
 	</table>
-	<div style="width: auto; height: 200px;"><%-- 增加一个div，用于调节页面大小，否则默认太小 --%>
+	<div style="width: auto;"><%-- 增加一个div，用于调节页面大小，否则默认太小 --%>
 	<div style="width: 800px; height: 1px;"></div>
 	
 	<t:tabs id="ttp" iframe="false" tabPosition="top" fit="false"><t:tab href="cgDynamGraphConfigHeadController.do?cgDynamGraphConfigParamList&id=${cgDynamGraphConfigHeadPage.id}" icon="icon-search" title="报表参数" id="cgDynamGraphConfigParam"></t:tab></t:tabs>				

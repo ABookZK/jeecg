@@ -18,8 +18,10 @@ public class TreeGrid implements java.io.Serializable {
  	private String state = "open";// 是否展开(open,closed)
  	private String order;//排序
     private Map<String, Object> fieldMap; // 存储实体字段信息容器： key-字段名称，value-字段值
-
     private String  functionType;// 其他参数
+
+    private String iconStyle;//菜单图表样式
+
     
 	public String getFunctionType() {
 		return functionType;
@@ -27,7 +29,6 @@ public class TreeGrid implements java.io.Serializable {
 	public void setFunctionType(String functionType) {
 		this.functionType = functionType;
 	}
-
 	public String getOrder() {
 		return order;
 	}
@@ -118,6 +119,9 @@ public class TreeGrid implements java.io.Serializable {
                 ", 'operations':'" + operations + '\'' +
                 ", 'state':'" + state + '\'' +
                 ", 'order':'" + order + '\'' +
+
+                ", 'iconStyle':'" + iconStyle + '\'' +
+
                 assembleFieldsJson() +
                 '}';
     }
@@ -133,5 +137,13 @@ public class TreeGrid implements java.io.Serializable {
         }
         return fieldsJson;
     }
+
+	public String getIconStyle() {
+		return iconStyle;
+	}
+	public void setIconStyle(String iconStyle) {
+		this.iconStyle = iconStyle;
+	}
+
  
 }

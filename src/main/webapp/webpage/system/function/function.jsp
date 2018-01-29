@@ -44,6 +44,12 @@
 			}
 		});
 	});
+	
+	function viewStyle(param) {
+		var url = "<%=basePath%>/functionIconStyle.jsp?style = "+ param;
+		//add("图标样式预览",url,'functionIconStyle',700,450);
+		window.open(url,"_blank");
+	}
 </script>
 </head>
 <body style="overflow-y: hidden" scroll="no">
@@ -53,9 +59,9 @@
 	<div class="form">
         <label class="Validform_label"> <t:mutiLang langKey="menu.name"/>: </label>
         <input name="functionName" class="inputxt" value="${function.functionName}" datatype="*2-50">
-        <span class="Validform_checktip"> <t:mutiLang langKey="menuname.rang4to15"/> </span>
+        <span class="Validform_checktip"> <t:mutiLang langKey="menuname.rang2to15"/> </span>
     </div>
-    <div class="form">
+   <div class="form">
         <label class="Validform_label"> <t:mutiLang langKey="funcType"/>: </label>
         <select name="functionType" id="functionType" datatype="*">
             <option value="0" <c:if test="${function.functionType eq 0}">selected="selected"</c:if>>
@@ -89,9 +95,9 @@
         <label class="Validform_label">
             <t:mutiLang langKey="menu.url"/>:
         </label>
-        <input name="functionUrl" class="inputxt" value="${function.functionUrl}">
+        <input name="functionUrl" class="inputxt" value="${function.functionUrl}" style="width:70%">
     </div>
-    <div class="form">
+    <div class="form" id="icon">
         <label class="Validform_label"> <t:mutiLang langKey="common.icon"/>: </label>
         <select name="TSIcon.id">
             <c:forEach items="${iconlist}" var="icon">
@@ -101,7 +107,7 @@
             </c:forEach>
         </select>
     </div>
-    <div class="form">
+    <div class="form" id="desktopIcon">
         <label class="Validform_label"> <t:mutiLang langKey="desktop.icon"/>: </label>
         <select name="TSIconDesk.id">
             <c:forEach items="${iconDeskList}" var="icon">
@@ -112,6 +118,14 @@
         </select>
     </div>
 	<div class="form" id="funorder"><label class="Validform_label"> <t:mutiLang langKey="menu.order"/>: </label> <input name="functionOrder" class="inputxt" value="${function.functionOrder}" datatype="n1-3"></div>
+	<div class="form" id="funiconstyle">
+        <label class="Validform_label">
+            <t:mutiLang langKey="menu.funiconstyle"/>:
+        </label>
+        <input name="functionIconStyle" class="inputxt" value="${function.functionIconStyle}" />
+       <%-- <a href="<%=basePath%>/webpage/common/functionIconStyleList.jsp?style=ace"  target="_blank">[ace图标样式]</a>--%>
+        <a href="http://fontawesome.dashgame.com" target="_blank"> <i class="fa fa-eye-slash"></i>选择图标库 </a>
+    </div>
 	</fieldset>
 </t:formvalid> 
 </body>

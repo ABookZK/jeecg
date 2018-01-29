@@ -1,5 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
 <head>
 <!-- context path -->
 ${config_iframe}
@@ -43,7 +43,7 @@ ${config_iframe}
 				        </script>
 					<#else>
 						<select name = "${x['field_name']}" WIDTH="100" style="width: 104px" <#if  (x['field_dictlist']?size >10)>class="easyui-combobox"</#if>>
-						<#if  (x['field_dictlist']?size <= 10)><option value = "">---请选择---</option></#if>
+						<#if  (x['field_dictlist']?size <= 10)><option value = "">-- 请选择 --</option></#if>
 						<#if  (x['field_dictlist']?size > 10)><option value = ""></option></#if>
 						<#list x['field_dictlist']  as xd>
 							<option value = "${xd['typecode']}">${xd['typename']}</option>

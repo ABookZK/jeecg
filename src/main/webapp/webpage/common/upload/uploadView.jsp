@@ -9,6 +9,7 @@
         function uploadSuccess(d,file,response){
                 $("#fileUrl").val(d.attributes.url);
                 $("#fileName").val(d.attributes.name);
+                $("#swfpath").val(d.attributes.swfpath);
                 var url = $("#fileUrl").val();
                 var html="";
                 if(url.indexOf(".gif")!=-1 || 
@@ -24,23 +25,25 @@
         function uploadCallback(callback,inputId){
                 var url = $("#fileUrl").val();
                 var name= $("#fileName").val();
-                callback(url,name,inputId);
+                var swfpath = $("#swfpath").val();
+                callback(url,name,inputId,swfpath);
                 
         }
 </script>
 </head>
- <body style="overflow-y: hidden" scroll="no">
+ <body style="overflow-x: hidden">
   <table cellpadding="0" cellspacing="1" class="formtable">
   <input id="documentTitle" type="hidden" name="documentTitle" value="blank"/>
   <input id="fileUrl" type="hidden"/>
   <input id="fileName" type="hidden"/>
+  <input id="swfpath" type="hidden">
    <tbody>
     <tr>
      <td align="right">
        <label class="Validform_label"></label>
      </td>
      <td class="value">
-      <t:upload name="instruction" dialog="false" multi="false" extend=".jpg;*,jpeg;*.png;*.gif;*.bmp;*.ico;*.tif;*.xls;*.doc;*.rar;*.txt;*.zip" queueID="instructionfile" view="false" auto="true" uploader="systemController.do?saveFiles" onUploadSuccess="uploadSuccess"  id="instruction" formData="documentTitle"></t:upload>
+      <t:upload name="instruction" dialog="false" multi="false" extend="" queueID="instructionfile" view="false" auto="true" uploader="cgUploadController.do?ajaxSaveFile" onUploadSuccess="uploadSuccess"  id="instruction" formData="documentTitle"></t:upload>
      </td>
     </tr>
     <tr>

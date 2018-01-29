@@ -267,7 +267,7 @@ public class TSSmsController extends BaseController {
 			org.jeecgframework.core.extend.hqlsearch.HqlGenerateUtil.installHql(cq, tSSms, request.getParameterMap());
 			
 			List<TSSmsEntity> tSSmss = this.tSSmsService.getListByCriteriaQuery(cq,false);
-			workbook = ExcelExportUtil.exportExcel(new ExportParams("消息发送记录表列表", "导出人:"+ResourceUtil.getSessionUserName().getRealName(),
+			workbook = ExcelExportUtil.exportExcel(new ExportParams("消息发送记录表列表", "导出人:"+ResourceUtil.getSessionUser().getRealName(),
 					"导出信息"), TSSmsEntity.class, tSSmss);
 			fOut = response.getOutputStream();
 			workbook.write(fOut);
@@ -310,7 +310,7 @@ public class TSSmsController extends BaseController {
 			}
 			// 产生工作簿对象
 			HSSFWorkbook workbook = null;
-			workbook = ExcelExportUtil.exportExcel(new ExportParams("消息发送记录表列表", "导出人:"+ResourceUtil.getSessionUserName().getRealName(),
+			workbook = ExcelExportUtil.exportExcel(new ExportParams("消息发送记录表列表", "导出人:"+ResourceUtil.getSessionUser().getRealName(),
 					"导出信息"), TSSmsEntity.class, null);
 			fOut = response.getOutputStream();
 			workbook.write(fOut);
@@ -359,9 +359,7 @@ public class TSSmsController extends BaseController {
 //		}
 		return j;
 	}
-	
-	
-	//add-begin--Author:jg_renjie  Date:20150610 for：今天需要提醒的【系统信息】	
+
 	/**
 	 * 今天需要提醒的【系统信息】
 	 * 
@@ -374,7 +372,7 @@ public class TSSmsController extends BaseController {
 		List<TSSmsEntity> list = new ArrayList<TSSmsEntity>();
 		
 		//1. 取得系统当前登录人ID
-		String curUser = ResourceUtil.getSessionUserName().getUserName();
+		String curUser = ResourceUtil.getSessionUser().getUserName();
 		//2.查询当前登录人的消息类型为"3",并且在查询的节点之后一个小时内的信息
 		//当前时间
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -417,9 +415,7 @@ public class TSSmsController extends BaseController {
 		}
 		return j;
 	}
-	//add-end--Author:jg_renjie  Date:20150610 for：今天需要提醒的【系统信息】
-	
-	//add-start--Author:jg_renjie  Date:20150611 for：今天需要提醒的【系统信息】的详细信息
+
 	/**
 	 * 当前登录人当日【系统信息】详细信息
 	 * 
@@ -429,7 +425,7 @@ public class TSSmsController extends BaseController {
 	public ModelAndView getSysInfos(HttpServletRequest request) {
 		
 		//1. 取得系统当前登录人ID
-		String curUser = ResourceUtil.getSessionUserName().getUserName();
+		String curUser = ResourceUtil.getSessionUser().getUserName();
 		//2.查询当前登录人的消息类型为"3",并且在查询的节点之后一个小时内的信息
 		//当前时间
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -439,7 +435,7 @@ public class TSSmsController extends BaseController {
 		
 		return new ModelAndView("system/sms/tSSmsDetailList");
 	}
-	//add-end--Author:jg_renjie  Date:20150611 for：今天需要提醒的【系统信息】的详细信息
+
 	
 	/**
 	 * 取得可读的消息
@@ -456,7 +452,7 @@ public class TSSmsController extends BaseController {
 			j.setObj(0);
 			List<TSSmsEntity> list = new ArrayList<TSSmsEntity>();
 			//1. 取得系统当前登录人ID
-			String curUser = ResourceUtil.getSessionUserName().getUserName();
+			String curUser = ResourceUtil.getSessionUser().getUserName();
 			//2.查询当前登录人的消息类型为"3"
 			//当前时间
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

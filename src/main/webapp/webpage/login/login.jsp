@@ -59,7 +59,10 @@
           <div class="position-relative">
             <div id="login-box" class="login-box visible widget-box no-border">
               <div class="widget-body">
-                <form id="loinForm" class="form-horizontal"  check="loginController.do?checkuser"  role="form" action="loginController.do?login"  method="post">
+                <!--update-begin--Author:zhangliang  Date:20170628 for：TASK #2116 【性能问题】优化登录逻辑---------------------->
+                <form id="loinForm" class="form-horizontal"    method="post">
+                <!--update-end--Author:zhangliang  Date:20170628 for：TASK #2116 【性能问题】优化登录逻辑---------------------->
+                <input type="hidden" id="ReturnURL"  name="ReturnURL" value="${ReturnURL }"/>
                 <div class="widget-main">
                  <div class="alert alert-warning alert-dismissible" role="alert" id="errMsgContiner">
 				  <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -72,7 +75,7 @@
                   <div class="space-6"></div>
                       <label class="block clearfix">
 								<span class="block input-icon input-icon-right">
-									<input type="text"  name="userName" class="form-control" placeholder="请输入用户名"  id="userName" value="admin"/>
+									<input type="text"  name="userName" iscookie="true" class="form-control" placeholder="请输入用户名"  id="userName" value="admin"/>
 									<i class="ace-icon fa fa-user"></i>
 								</span>
                       </label>
@@ -98,6 +101,9 @@
                           <i class="ace-icon fa fa-key"></i>
                           <span class="bigger-110" >登录</span>
                         </button>
+                        <!-- //update--begin--author:zhangjiaqiang date:20170929 for:TASK #2341 【新功能】邮件找回密码的功能，向用户邮箱发一个修改密码的链接，自助修改密码-->
+                        <a href="loginController.do?goResetPwdMail" class="btn btn-link">忘记密码 ?</a>
+                         <!-- //update--begin--author:zhangjiaqiang date:20170929 for:TASK #2341 【新功能】邮件找回密码的功能，向用户邮箱发一个修改密码的链接，自助修改密码-->
                       </div>
                       <div class="space-4"></div>
 
@@ -114,7 +120,7 @@
                 </form>
               </div>
             </div>
-            <div class="center"><h4 class="blue" id="id-company-text">&copy; JEECG版权所有 v_3.6.5</h4></div>
+            <div class="center"><h4 class="blue" id="id-company-text">&copy; JEECG版权所有 v_3.7.2</h4></div>
             <div class="navbar-fixed-top align-right">
               <br />
               &nbsp;
@@ -144,6 +150,7 @@
 <script type="text/javascript" src="plug-in/mutiLang/zh-cn.js"></script>
 <script type="text/javascript" src="plug-in/login/js/jquery.tipsy.js"></script>
 <script type="text/javascript" src="plug-in/login/js/iphone.check.js"></script>
+<script type="text/javascript" src="plug-in/login/js/login.js"></script>
 <script type="text/javascript">
 	$(function(){
 		optErrMsg();
@@ -157,7 +164,9 @@
    //输入验证码，回车登录
   $(document).keydown(function(e){
   	if(e.keyCode == 13) {
-  		$("#but_login").click();
+
+      setTimeout("$('#but_login').click()","100");
+
   	}
   });
 
@@ -190,8 +199,10 @@
   //登录处理函数
   function newLogin(orgId) {
     setCookie();
-    var actionurl=$('form').attr('action');//提交路径
-    var checkurl=$('form').attr('check');//验证路径
+
+    var actionurl="loginController.do?login";//提交路径
+    var checkurl="loginController.do?checkuser";//验证路径
+
     var formData = new Object();
     var data=$(":input").each(function() {
       formData[this.name] =$("#"+this.name ).val();
@@ -236,6 +247,7 @@
                 callback : function() {
                   iframe = this.iframe.contentWindow;
                   var orgId = $('#orgId', iframe.document).val();
+
                   formData['orgId'] = orgId ? orgId : "";
                   $.ajax({
               		async : false,
@@ -249,6 +261,7 @@
               			window.location.href = actionurl;
               		}
                   });
+
                   this.close();
                   return false;
                 }
@@ -262,14 +275,18 @@
           }
        } else {
 			showErrorMsg(d.msg);
+
+		  	if(d.msg === "用户名或密码错误" || d.msg === "验证码错误")
+		  		reloadRandCodeImage();
+
         }
       }
     });
   }
   //登录提示消息显示
-  function showErrorMsg(msg){
+  function showErrorMsg(msg){	
     $("#errMsgContiner").show();
-    $("#showErrMsg").html(msg);
+    $("#showErrMsg").html(msg);    
     window.setTimeout(optErrMsg,3000); 
   }
   /**
@@ -307,7 +324,9 @@ function reloadRandCodeImage() {
 //设置cookie
   function setCookie()
   {
-  	if ($('#on_off').val() == '1') {
+
+  	if ($('#on_off').attr("checked")) {
+
   		$("input[iscookie='true']").each(function() {
   			$.cookie(this.name, $("#"+this.name).val(), "/",24);
   			$.cookie("COOKIE_NAME","true", "/",24);

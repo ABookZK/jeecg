@@ -92,38 +92,32 @@ public class LogController extends BaseController {
 	@RequestMapping(params = "datagrid")
 	public void datagrid(HttpServletRequest request, HttpServletResponse response, DataGrid dataGrid) {
 		CriteriaQuery cq = new CriteriaQuery(TSLog.class, dataGrid);
+		
+		//日志级别查询条件
 		String loglevel = request.getParameter("loglevel");
-		if (loglevel == null || loglevel.equals("0")) {
-		} else {
+		if (loglevel != null && !"0".equals(loglevel)) {
 			cq.eq("loglevel", oConvertUtils.getShort(loglevel));
 			cq.add();
 		}
-//        add-begin--Author:zhangguoming  Date:20140427 for：添加查询条件  操作时间
+		//时间范围查询条件
         String operatetime_begin = request.getParameter("operatetime_begin");
-        if(operatetime_begin != null) {
-            Timestamp beginValue = null;
-            try {
-                beginValue = DateUtils.parseTimestamp(operatetime_begin, "yyyy-MM-dd");
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            cq.ge("operatetime", beginValue);
-        }
         String operatetime_end = request.getParameter("operatetime_end");
-        if(operatetime_end != null) {
-            if (operatetime_end.length() == 10) {
-                operatetime_end =operatetime_end + " 23:59:59";
-            }
-            Timestamp endValue = null;
-            try {
-                endValue = DateUtils.parseTimestamp(operatetime_end, "yyyy-MM-dd hh:mm:ss");
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            cq.le("operatetime", endValue);
+        if(oConvertUtils.isNotEmpty(operatetime_begin)){
+        	try {
+				cq.ge("operatetime", DateUtils.parseDate(operatetime_begin, "yyyy-MM-dd hh:mm:ss"));
+			} catch (ParseException e) {
+				logger.error(e);
+			}
+        	cq.add();
         }
-        cq.add();
-//        add-end--Author:zhangguoming  Date:20140427 for：添加查询条件  操作时间
+        if(oConvertUtils.isNotEmpty(operatetime_end)){
+        	try {
+				cq.le("operatetime", DateUtils.parseDate(operatetime_end, "yyyy-MM-dd hh:mm:ss"));
+			} catch (ParseException e) {
+				logger.error(e);
+			}
+        	cq.add();
+        }
         this.systemService.getDataGridReturn(cq, true);
 		TagUtil.datagrid(response, dataGrid);
 	}
@@ -199,9 +193,7 @@ public class LogController extends BaseController {
 		Long count = systemService.getCountForJdbc("SELECT COUNT(1) FROM T_S_Log WHERE 1=1");
 		List lt = new ArrayList();
 		hc = new Highchart();
-
 		hc.setName(MutiLangUtil.getMutiLangInstance().getLang(USER_BROWSER_ANALYSIS));
-
 		hc.setType(reportType);
 		Map<String, Object> map;
 		if (userBroswerList.size() > 0) {

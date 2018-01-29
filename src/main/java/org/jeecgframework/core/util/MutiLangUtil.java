@@ -17,8 +17,6 @@ import java.util.List;
 public class MutiLangUtil {
 	private static Log logger = LogFactory.getLog(StringUtil.class);
 
-    private static MutiLangServiceI mutiLangService;
-
 	/**
 	 * 通用删除消息方法
 	 * 
@@ -30,7 +28,6 @@ public class MutiLangUtil {
 		return message;
 	}
 
-    // add-begin--Author:zhangguoming  Date:20140727 for：通用删除消息方法
 	/**
 	 * 通用删除消息方法
 	 *
@@ -41,7 +38,7 @@ public class MutiLangUtil {
 		String message = getMutiLangInstance().getLang("common.delete.fail.param", param_lang_key);
 		return message;
 	}
-    // add-end--Author:zhangguoming  Date:20140727 for：通用删除消息方法
+
 	
 	/**
 	 * 通用更新成功消息方法
@@ -167,10 +164,9 @@ public class MutiLangUtil {
 	 */
 	public static MutiLangServiceI getMutiLangInstance()
 	{
-		if(mutiLangService == null)
-		{
-			mutiLangService = ApplicationContextUtil.getContext().getBean(MutiLangServiceI.class);	
-		}
+
+		MutiLangServiceI mutiLangService = ApplicationContextUtil.getContext().getBean(MutiLangServiceI.class);	
+
 		return mutiLangService;
 	}
 	
@@ -179,7 +175,6 @@ public class MutiLangUtil {
 		return context;
 	}
 
-    // add-begin--Author:zhangguoming  Date:20140928 for：多语言
     /**
      * 处理列表中对象的多语言属性值，即为列表中实体对象的属性值替换为多语言所对应的值
      * @param list 对象列表
@@ -214,6 +209,6 @@ public class MutiLangUtil {
         list.clear();
         list.addAll(newList);
     }
-    // add-end--Author:zhangguoming  Date:20140928 for：多语言
+
 
 }

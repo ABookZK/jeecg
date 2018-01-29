@@ -1,9 +1,9 @@
-﻿$(function() {
+﻿﻿$(function() {
 	$("#nav").hide();
 	//easy ui树加载会在文档加载完执行,所以初始化菜单要延迟一秒 by jueyue
-	// update-start--Author:gaofeng  Date:2014-01-09：由于不需展示左侧的树，因此降低刷新的延迟时间  
+
 	setTimeout(InitLeftMenu,100);
-	//update-start--Author:gaofeng  Date:2014-01-09：由于不需展示左侧的树，因此降低刷新的延迟时间 
+
 	tabClose();
 	tabCloseEven();
 	// 释放内存
@@ -30,13 +30,13 @@
 var rowid="";
 // 初始化左侧
 function InitLeftMenu() {
-	// update-start--Author:刘洋  Date:2015-04-11 for:修改左侧菜单栏，当侧拉左侧菜单栏宽度，菜单高度不能自适应的问题
+
 	var navaa=$("#nav .panel");
     var winheight = document.body.clientHeight - 157;
     navaa.find(".panel-body").panel({//左侧菜单 宽度拉伸，自动调整
     	onResize:function(){ navaa.find(".panel-body").css("height",winheight); }
     });
-    // update-end--Author:刘洋  Date:2014-04-11 for:修改左侧菜单栏，当侧拉左侧菜单栏宽度，菜单高度不能自适应的问题
+
 	
 	$('.easyui-accordion li div').click(function() {
 		$('.easyui-accordion li div').removeClass("selected");
@@ -46,8 +46,7 @@ function InitLeftMenu() {
 	}, function() {
 		$(this).parent().removeClass("hover");
 	});
-	
-	// update-start--Author:gaofeng  Date:2014-01-09 for:新增首页风格,一级菜单点击事件的切换操作
+
 	 $(".shortcut li").live("click",function(){
 	   $(this).find(".imag1").hide();
 	   $(this).find(".imag2").show();
@@ -61,7 +60,6 @@ function InitLeftMenu() {
 	    var winheight = document.body.clientHeight - 157;//计算左侧二级菜单的行高度，以便自动判断是否需要滚动条
 	    navaa.find(".panel-body").css("height",winheight);
 	 });
-	// update-end--Author:gaofeng  Date:2014-01-09 for:新增首页风格,一级菜单点击事件的切换操作
 
 	// begin author：屈然博 2013-8-04 for：避免监听树自带三角点击事件
 	$('.easyui-tree').tree({
@@ -74,15 +72,15 @@ function InitLeftMenu() {
         url: "loginController.do?primaryMenu",
         async:false,
         success: function (data) {
-//            update-begin--Author:zhangguoming  Date:20140429 for：一级菜单右侧有双引号，且在ie下样式错位
+
 //            $(".shortcut").html(data);
             $(".shortcut").html(data.replaceAll("\"", ""));
-//            update-end--Author:zhangguoming  Date:20140429 for：一级菜单右侧有双引号，且在ie下样式错位
+
         }
     });
-	// update-start--Author:Peak  Date:2014-01-09：新增首页风格,初始化第一个菜单的内容显示
+
 	$(".shortcut li").eq(0).trigger("click");
-	//update-end--Author:Peak  Date:2014-01-09：新增首页风格,初始化第一个菜单的内容显示
+
 	$("#nav").show();
 }
 
@@ -111,7 +109,14 @@ function openThisNoed(node) {
 		var fun = $(node.target).find('a').attr("onclick");
 		var params = fun.substring(7, fun.length - 1).replaceAll("'", "")
 				.split(",");
-		addTab(params[0], params[1], params[2]);
+
+		if(params.length > 3){
+			params = fun.substring(14, fun.length - 1).replaceAll("'", "").split(",");
+			addTab4MenuId(params[0], params[1], params[2], params[3]);
+		}else{
+			addTab(params[0], params[1], params[2]);
+		}
+
 	}
 	// end author：屈然博 2013-7-12 for：叶子节点扩大点击范围
 	
@@ -171,6 +176,89 @@ function addTab(subtitle, url, icon) {
 	tabClose();
 
 }
+//add-begin--Author:yugwu  Date:20170802 for:TASK #2240 【ie兼容问题】IE下，列表加载很慢 IE特殊处理，效率与效果两害相权取其轻----
+var isIE8ShortCut = false;
+var userAgent = navigator.userAgent;
+if (userAgent.indexOf("Opera") <= -1 && userAgent.indexOf("compatible") > -1 && userAgent.indexOf("MSIE") > -1) {
+	var reIE = new RegExp("MSIE (\\d+\\.\\d+);");
+    reIE.test(userAgent);
+    var fIEVersion = parseFloat(RegExp["$1"]);
+    if(fIEVersion < 9){
+    	isIE8ShortCut = true;
+    }
+}
+//add-end--Author:yugwu  Date:20170802 for:TASK #2240 【ie兼容问题】IE下，列表加载很慢 IE特殊处理，效率与效果两害相权取其轻----
+//add-begin--Author:yugwu  Date:20170629 for:[TASK #2185] 【bug】shortcut及经典下同名菜单冲突，只能点开一个----
+function addTab4MenuId(subtitle, url, icon, funmenuid) {
+	var progress = $("div.messager-progress");
+	if(progress.length){return;}
+	rowid="";
+
+//	$.messager.progress({
+//		text : loading,
+//		interval : 200
+//	});
+
+	showloading();
+
+	var oldTabIndex;
+	var hastab = false;
+	var allTabs = $('#maintabs').tabs('tabs');
+	for(var tempi=0; tempi < allTabs.length; tempi++){
+		var singleTab = allTabs[tempi];
+		var isequal = false;
+		if(funmenuid){
+			isequal = (funmenuid == singleTab.panel('options').menuid && subtitle == singleTab.panel('options').title);
+		}else{
+			isequal = (subtitle == singleTab.panel('options').title);
+		}
+		if(isequal){
+			oldTabIndex = tempi;
+			hastab = true;
+			break;
+		}
+	}
+	if (!hastab) {
+		//判断是否进行iframe方式打开tab，默认为href方式
+		if(url.indexOf('isHref') != -1){
+			$('#maintabs').tabs('add', {
+				menuid : funmenuid,
+				title : subtitle,
+				href : url,
+				closable : true,
+				icon : icon
+			});		
+		}else{
+
+			var iframeContent = '<iframe onreadystatechange="hiddenloading();" onload="hiddenloading();" src="' + url + '" frameborder="0" style="border:0;width:100%;height:99.4%;"></iframe>';
+
+			if(!isIE8ShortCut){
+			}else{
+				iframeContent = '<iframe onreadystatechange="hiddenloading();" onload="hiddenloading();" src="' + url + '" frameborder="0" style="border:0;width:100%;height:99.4%;"></iframe>';
+			}
+
+			$('#maintabs').tabs('add', {
+				menuid : funmenuid,
+				title : subtitle,
+				content : iframeContent,
+				closable : true,
+				icon : icon
+			});	
+
+		}
+
+	} else {
+		$('#maintabs').tabs('select', oldTabIndex);
+
+//		$.messager.progress('close');
+
+	}
+
+	window.setTimeout(hiddenloading,3000);
+
+	tabClose();
+}
+//add-end--Author:yugwu  Date:20170629 for:[TASK #2185] 【bug】shortcut及经典下同名菜单冲突，只能点开一个----
 var title_now;
 function addLeftOneTab(subtitle, url, icon) {
 	rowid="";
@@ -223,6 +311,9 @@ function tabClose() {
 	$(".tabs-inner").dblclick(function() {
 		var subtitle = $(this).children(".tabs-closable").text();
 		$('#tabs').tabs('close', subtitle);
+
+		hiddenloading();
+
 	})
 	/* 为选项卡绑定右键 */
 	$(".tabs-inner").bind('contextmenu', function(e) {
@@ -235,6 +326,9 @@ function tabClose() {
 
 		$('#mm').data("currtab", subtitle);
 		// $('#maintabs').tabs('select',subtitle);
+
+		hiddenloading();
+
 		return false;
 	});
 }
@@ -260,11 +354,11 @@ function tabCloseEven() {
 	$('#mm-tabcloseall').click(function() {
 		$('.tabs-inner span').each(function(i, n) {
 			var t = $(n).text();
-//            update-begin--Author:zhangguoming  Date:20140905 for：不关闭首页
+
             if (t != '首页') {
                 $('#maintabs').tabs('close', t);
             }
-//            update-end--Author:zhangguoming  Date:20140905 for：不关闭首页
+
 		});
 	});
 	// 关闭除当前之外的TAB
@@ -295,11 +389,11 @@ function tabCloseEven() {
 		}
 		prevall.each(function(i, n) {
 			var t = $('a:eq(0) span', $(n)).text();
-//            update-begin--Author:zhangguoming  Date:20140612 for：不关闭首页
+
             if (t != '首页') {
                 $('#maintabs').tabs('close', t);
             }
-//            update-end--Author:zhangguoming  Date:20140612 for：不关闭首页
+
 		});
 		return false;
 	});
@@ -317,3 +411,11 @@ $.parser.onComplete = function() {/* 页面所有easyui组件渲染成功后，�
 		$.messager.progress('close');
 	}, 200);
 };
+
+function hiddenloading(){
+	$("#panelloadingDiv").hide();
+}
+
+function showloading(){
+	$("#panelloadingDiv").show();
+}

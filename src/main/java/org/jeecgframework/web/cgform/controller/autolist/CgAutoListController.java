@@ -4,29 +4,15 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.jeecgframework.web.cgform.common.CgAutoListConstant;
-import org.jeecgframework.web.cgform.engine.FreemarkerHelper;
-import org.jeecgframework.web.cgform.entity.config.CgFormFieldEntity;
-import org.jeecgframework.web.cgform.entity.config.CgFormHeadEntity;
-import org.jeecgframework.web.cgform.entity.template.CgformTemplateEntity;
-import org.jeecgframework.web.cgform.service.autolist.CgTableServiceI;
-import org.jeecgframework.web.cgform.service.autolist.ConfigServiceI;
-import org.jeecgframework.web.cgform.service.config.CgFormFieldServiceI;
-import org.jeecgframework.web.cgform.service.template.CgformTemplateServiceI;
-import org.jeecgframework.web.cgform.util.QueryParamUtil;
-import org.jeecgframework.web.cgform.util.TemplateUtil;
-import org.jeecgframework.web.system.pojo.base.DictEntity;
-import org.jeecgframework.web.system.pojo.base.TSOperation;
-import org.jeecgframework.web.system.service.SystemService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.jeecgframework.core.common.controller.BaseController;
@@ -34,13 +20,32 @@ import org.jeecgframework.core.common.model.json.AjaxJson;
 import org.jeecgframework.core.common.model.json.DataGrid;
 import org.jeecgframework.core.constant.Globals;
 import org.jeecgframework.core.enums.SysThemesEnum;
+import org.jeecgframework.core.online.util.FreemarkerHelper;
+import org.jeecgframework.core.util.ApplicationContextUtil;
 import org.jeecgframework.core.util.ContextHolderUtils;
+import org.jeecgframework.core.util.IpUtil;
 import org.jeecgframework.core.util.JeecgDataAutorUtils;
 import org.jeecgframework.core.util.MutiLangUtil;
 import org.jeecgframework.core.util.ResourceUtil;
 import org.jeecgframework.core.util.StringUtil;
 import org.jeecgframework.core.util.SysThemesUtil;
 import org.jeecgframework.core.util.oConvertUtils;
+import org.jeecgframework.web.cgform.common.CgAutoListConstant;
+import org.jeecgframework.web.cgform.entity.config.CgFormFieldEntity;
+import org.jeecgframework.web.cgform.entity.config.CgFormHeadEntity;
+import org.jeecgframework.web.cgform.entity.template.CgformTemplateEntity;
+import org.jeecgframework.web.cgform.service.autolist.CgTableServiceI;
+import org.jeecgframework.web.cgform.service.autolist.ConfigServiceI;
+import org.jeecgframework.web.cgform.service.config.CgFormFieldServiceI;
+import org.jeecgframework.web.cgform.service.template.CgformTemplateServiceI;
+import org.jeecgframework.web.cgform.util.PublicUtil;
+import org.jeecgframework.web.cgform.util.QueryParamUtil;
+import org.jeecgframework.web.cgform.util.TemplateUtil;
+import org.jeecgframework.web.system.pojo.base.DictEntity;
+import org.jeecgframework.web.system.pojo.base.TSOperation;
+import org.jeecgframework.web.system.pojo.base.TSType;
+import org.jeecgframework.web.system.service.MutiLangServiceI;
+import org.jeecgframework.web.system.service.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -67,6 +72,8 @@ public class CgAutoListController extends BaseController{
 	private CgFormFieldServiceI cgFormFieldService;
 	@Autowired
 	private CgformTemplateServiceI cgformTemplateService;
+	@Autowired
+	private MutiLangServiceI mutiLangService;
 	private static Logger log = Logger.getLogger(CgAutoListController.class);
 	/**
 	 * 动态列表展现入口
@@ -98,7 +105,54 @@ public class CgAutoListController extends BaseController{
 			paras.put("_olstylecode",template);
 		}
         paras.put("this_olstylecode",template);
-		CgformTemplateEntity entity=cgformTemplateService.findByCode(template);
+
+        if(template!=null && template.indexOf("subgrid")>=0){
+        	String tableName = id;
+        	String tablename = PublicUtil.replaceTableName(tableName);
+            Map<String, Object> data = new HashMap<String, Object>();
+            Map configData = null;
+	        configData = cgFormFieldService.getFtlFormConfig(tableName,jversion);
+            
+        	data = new HashMap(configData);
+        	//如果该表是主表查出关联的附表
+        	CgFormHeadEntity head = (CgFormHeadEntity)data.get("head");
+            Map<String, Object> dataForm = new HashMap<String, Object>();
+          
+            Iterator it=dataForm.entrySet().iterator();
+    	    while(it.hasNext()){
+    	    	Map.Entry entry=(Map.Entry)it.next();
+    	        String ok=(String)entry.getKey();
+    	        Object ov=entry.getValue();
+    	        data.put(ok, ov);
+    	    }
+            Map<String, Object> tableData  = new HashMap<String, Object>();
+            //获取主表或单表表单数据
+
+            tableData.put(tablename, dataForm);
+            //获取附表表表单数据
+        	if(StringUtils.isNotEmpty(id)){
+    	    	if(head.getJformType()==CgAutoListConstant.JFORM_TYPE_MAIN_TALBE){
+    		    	String subTableStr = head.getSubTableStr();
+    		    	if(StringUtils.isNotEmpty(subTableStr)){
+    		    		 String [] subTables = subTableStr.split(",");
+    		    		 List<Map<String,Object>> subTableData = new ArrayList<Map<String,Object>>();
+    		    		 for(String subTable:subTables){
+    			    			subTableData = cgFormFieldService.getSubTableData(tableName,subTable,id);
+    			    			tableData.put(subTable, subTableData);
+    		    		 }
+    		    	}
+    	    	}
+        	}
+        	//装载单表/(主表和附表)表单数据
+        	data.put("data", tableData); 
+        	data.put("id", id);
+        	data.put("head", head);
+        	paras.putAll(data);
+        }
+
+        paras.put("brower_type", ContextHolderUtils.getSession().getAttribute("brower_type"));
+
+        CgformTemplateEntity entity=cgformTemplateService.findByCode(template);
 		String html = viewEngine.parseTemplate(TemplateUtil.getTempletPath(entity,0, TemplateUtil.TemplateType.LIST), paras);
 
 		PrintWriter writer = null;
@@ -140,6 +194,9 @@ public class CgAutoListController extends BaseController{
 		String jversion = cgFormFieldService.getCgFormVersionByTableName(configId);
 		Map<String, Object>  configs = configService.queryConfigs(configId,jversion);
 		String table = (String) configs.get(CgAutoListConstant.TABLENAME);
+
+		table = PublicUtil.replaceTableName(table);
+
 		Map params =  new HashMap<String,Object>();
 		//step.2 获取查询条件以及值
 		List<CgFormFieldEntity> beans = (List<CgFormFieldEntity>) configs.get(CgAutoListConstant.FILEDS);
@@ -205,7 +262,15 @@ public class CgAutoListController extends BaseController{
 			if(dicList.size() > 0){
 				for(Map<String, Object> resultMap:result){
 					StringBuffer sb = new StringBuffer();
-					String value = (String)resultMap.get(b.getFieldName());
+
+					Object obj = resultMap.get(b.getFieldName());
+					String value = null;
+					if(obj instanceof Integer){
+						value = String.valueOf(obj);
+					}else{
+						value = (String)obj;
+					}
+
 					if(oConvertUtils.isEmpty(value)){continue;}
 					String[] arrayVal = value.split(",");
 					if(arrayVal.length > 1){
@@ -281,9 +346,8 @@ public class CgAutoListController extends BaseController{
 //						}
 						for(DictEntity dictEntity:dicDataList){
 							if(value.equalsIgnoreCase(dictEntity.getTypecode())){
-
 								r.put(bean.getFieldName(),MutiLangUtil.getMutiLangInstance().getLang(dictEntity.getTypename()));
-
+								break;
 							}
 						}
 					}
@@ -304,10 +368,16 @@ public class CgAutoListController extends BaseController{
 	public AjaxJson del(String configId,String id,
 			HttpServletRequest request) {
 		AjaxJson j = new AjaxJson();
-		String jversion = cgFormFieldService.getCgFormVersionByTableName(configId);
-		String table = (String) configService.queryConfigs(configId,jversion).get(CgAutoListConstant.TABLENAME);
+
+		String tableName = PublicUtil.replaceTableName(configId);
+		String jversion = cgFormFieldService.getCgFormVersionByTableName(tableName);
+		String table = (String) configService.queryConfigs(tableName,jversion).get(CgAutoListConstant.TABLENAME);
+		//String jversion = cgFormFieldService.getCgFormVersionByTableName(configId);
+		//String table = (String) configService.queryConfigs(configId,jversion).get(CgAutoListConstant.TABLENAME);
+
 		cgTableService.delete(table, id);
 		String message = "删除成功";
+		log.info("["+IpUtil.getIpAddr(request)+"][online表单数据删除]"+message+"表名："+configId);
 		systemService.addLog(message, Globals.Log_Type_DEL,
 				Globals.Log_Leavel_INFO);
 		j.setMsg(message);
@@ -336,6 +406,7 @@ public class CgAutoListController extends BaseController{
 		}
 		systemService.addLog(message, Globals.Log_Type_DEL,
 				Globals.Log_Leavel_INFO);
+		log.info("["+IpUtil.getIpAddr(request)+"][online表单数据批量删除]"+message+"表名："+configId);
 		j.setMsg(message);
 		return j;
 	}
@@ -386,6 +457,9 @@ public class CgAutoListController extends BaseController{
 			fm.put(CgAutoListConstant.FIELD_QUERYMODE, bean.getQueryMode());
 			fm.put(CgAutoListConstant.FIELD_SHOWTYPE, bean.getShowType());
 			fm.put(CgAutoListConstant.FIELD_TYPE, bean.getType());
+
+			fm.put(CgAutoListConstant.FIELD_IS_NULL, bean.getIsNull());
+
 			fm.put(CgAutoListConstant.FIELD_LENGTH, bean.getFieldLength()==null?"120":bean.getFieldLength());
 			fm.put(CgAutoListConstant.FIELD_HREF, bean.getFieldHref()==null?"":bean.getFieldHref());
 			loadDic(fm,bean);
@@ -459,6 +533,9 @@ public class CgAutoListController extends BaseController{
 			sb.append(SysThemesUtil.getCommonTheme(sysThemesEnum));
 //			sb.append("<script type=\"text/javascript\" src=\"plug-in/lhgDialog/lhgdialog.min.js\"></script>");
 			sb.append(SysThemesUtil.getLhgdialogTheme(sysThemesEnum));
+
+			sb.append("<script type=\"text/javascript\" src=\"plug-in/layer/layer.js\"></script>");
+
 			sb.append(StringUtil.replace("<script type=\"text/javascript\" src=\"plug-in/tools/curdtools_{0}.js\"></script>", "{0}", lang));
 			
 			sb.append("<script type=\"text/javascript\" src=\"plug-in/tools/easyuiextend.js\"></script>");
@@ -471,13 +548,13 @@ public class CgAutoListController extends BaseController{
 		paras.put(CgAutoListConstant.CONFIG_IFRAME, sb.toString());
 	}
 	/**
-	 * 加载按钮权限
+	 * Online表单控制列表链接按钮权限
 	 * @param paras
 	 * @param request
 	 */
 	private void loadAuth(Map<String, Object> paras, HttpServletRequest request) {
 		List<TSOperation>  nolist = (List<TSOperation>) request.getAttribute(Globals.NOAUTO_OPERATIONCODES);
-		if(ResourceUtil.getSessionUserName().getUserName().equals("admin")|| !Globals.BUTTON_AUTHORITY_CHECK){
+		if(ResourceUtil.getSessionUser().getUserName().equals("admin")|| !Globals.BUTTON_AUTHORITY_CHECK){
 			nolist = null;
 		}
 		List<String> list = new ArrayList<String>();
@@ -607,6 +684,24 @@ public class CgAutoListController extends BaseController{
 	 * @return
 	 */
 	private List<DictEntity> queryDic(String dicTable, String dicCode,String dicText) {
+
+		if(dicTable==null || dicTable.length()<=0){
+			List<TSType> listt = ResourceUtil.allTypes.get(dicCode.toLowerCase());
+			List<DictEntity> li = new ArrayList<DictEntity>();
+			if(listt!=null){
+				for (TSType tsType : listt) {
+					DictEntity d = new DictEntity();
+					d.setTypecode(tsType.getTypecode());
+
+					d.setTypename(mutiLangService.getLang(tsType.getTypename()));
+
+					li.add(d);
+				}
+			}
+			return li;
+		}
+
+		
 //		StringBuilder dicSql = new StringBuilder();
 //		if(StringUtil.isEmpty(dicTable)){//step.1 如果没有字典表则使用系统字典表
 //			dicTable = CgAutoListConstant.SYS_DIC;
@@ -638,7 +733,7 @@ public class CgAutoListController extends BaseController{
 			sysVarName = sysVarName.replaceAll("\\{", "");
 			sysVarName = sysVarName.replaceAll("\\}", "");
 			sysVarName =sysVarName.replace("sys.", "");
-			//---author:jg_xugj----start-----date:20151226--------for：#814 【数据权限】扩展支持写表达式，通过session取值
+
 			return ResourceUtil.converRuleValue(sysVarName); 		
 		}else{
 			return sysVarName;
